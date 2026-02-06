@@ -5,6 +5,7 @@ import static android.os.SystemClock.sleep;
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -20,8 +21,6 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 /*
@@ -40,6 +39,7 @@ public class robotHardware {
     public DcMotor motorbr = null;
     public DcMotor motorbl = null;
     public DcMotor motorintake = null;
+    public DcMotorEx motorturret = null;
     //public Limelight3A limelight;
 
     // Use DcMotorEx for shooter so we can control velocity (ticks/sec)
@@ -59,7 +59,7 @@ public class robotHardware {
         motorfr = hwMap.get(DcMotor.class, "fr");
         motorbl = hwMap.get(DcMotor.class, "bl");
         motorbr = hwMap.get(DcMotor.class, "br");
-
+        motorturret = hwMap.get(DcMotorEx.class, "turret");
         motorintake = hwMap.get(DcMotor.class, "intake");
 
         // get shooter as DcMotorEx to expose velocity control
@@ -67,12 +67,15 @@ public class robotHardware {
 
         //limelight = hwMap.get(Limelight3A.class, "limelight");
 
+
+        //front right motor no encoder
+
         motorfr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorfl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorbr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorbl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorfr.setDirection(DcMotor.Direction.REVERSE);
-        motorbr.setDirection(DcMotor.Direction.REVERSE);
+        motorfl.setDirection(DcMotor.Direction.REVERSE);
+        motorbl.setDirection(DcMotor.Direction.REVERSE);
         motorintake.setDirection(DcMotor.Direction.REVERSE);
 
 
@@ -173,47 +176,20 @@ public class robotHardware {
         motorshoot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
-    public void autoShootShort(){
-        if(motorshoot.getVelocity() > 1430){
+    public void autoShootShort(double rpm){
+        startShooterAtRPM(rpm + 50);
+        if(motorshoot.getVelocity() > rpm){
             motorintake.setPower(-1.0);
+            telemetry.addData("shooter velocity", motorshoot.getVelocity());
+            telemetry.addData("shooter tpr", motorshoot.getMotorType().getTicksPerRev());
+            telemetry.addData("projected rpm", rpm);
+            telemetry.update();
             sleep(400);
             motorintake.setPower(0.0);
+
+
         }
     }
 
-    public void autoShootLong(){
-        if(motorshoot.getVelocity() > 1785){
-            motorintake.setPower(-1.0);
-            sleep(400);
-            motorintake.setPower(0.0);
-        }
-    }
-/*
-    private void wheelIndividualTest() {
-        boolean b = gamepad1.b;
-        boolean ddown = gamepad1.dpad_down;
 
-        if (b && ddown) {
-            robot.motorfl.setPower(1);
-            sleep(500);
-
-            robot.motorfl.setPower(0);
-            robot.motorfr.setPower(1);
-
-            sleep(500);
-            robot.motorfr.setPower(0);
-            robot.motorbr.setPower(1);
-
-            sleep(500);
-            robot.motorbr.setPower(0);
-            robot.motorbl.setPower(1);
-
-            sleep(500);
-            robot.motorbl.setPower(0);
-        }
-
-
-    }
-
- */
 }

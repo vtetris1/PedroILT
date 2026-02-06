@@ -9,8 +9,18 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.hardware.robotHardware;
-
 import java.util.function.Supplier;
+
+
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.teamcode.hardware.robotHardware;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 @Configurable
 @TeleOp(name = "Opmode2")
@@ -22,12 +32,14 @@ public class Opmode2 extends LinearOpMode {
     private boolean prevB = false;
     private boolean prevY = false;
     private boolean prevX = false;
+    private boolean lastSwitch = false;
 
     private final double SHOOTER_RPM_SHORT = 1400.0; // 28x2786/60 //28
     private final double SHOOTER_RPM_LONG = 1840; //36?
     private final double SHOOTER_RPM_CLEAR = -1000;
     private final double SHOOTER_CHANGE = 100;
     private double rpm = SHOOTER_RPM_LONG;
+
 
 
     private double controller1Speed = 1;
@@ -40,9 +52,11 @@ public class Opmode2 extends LinearOpMode {
     private boolean slowMode = false;
     private double slowModeMultiplier = 0.5;
 
+
     private long nowMs() {
         return System.currentTimeMillis();
     }
+
 
     @Override
     public void runOpMode() {
@@ -54,10 +68,10 @@ public class Opmode2 extends LinearOpMode {
         while (opModeIsActive()) {
             loop();
 
-            boolean a = gamepad1.a;
-            boolean b = gamepad1.b;
-            boolean y = gamepad1.y;
-            boolean x = gamepad1.x;
+            boolean a = gamepad2.a;
+            boolean b = gamepad2.b;
+            boolean y = gamepad2.y;
+            boolean x = gamepad2.x;
 
 //DRIVING
             double x_dir = gamepad1.left_stick_x * 1.3 * controller1Speed;
@@ -81,17 +95,22 @@ public class Opmode2 extends LinearOpMode {
 
             if (gamepad1.left_bumper){
                 robot.motorintake.setPower(-1.0);
-            } else if (gamepad1.left_trigger > 0){
+            } else if (gamepad1.left_trigger > 0.5){
                 robot.motorintake.setPower(1.0);
             } else {
                 robot.motorintake.setPower(0);
             }
 
             //shooting
+
             if(b && !prevB){
                 rpm += SHOOTER_CHANGE;
+                sleep(50);
+                lastSwitch = true;
             } if(x && !prevX){
                 rpm -= SHOOTER_CHANGE;
+                sleep(50);
+                lastSwitch = true;
             }
             /*
             TO-DO: (jimmy if u see this please help)
@@ -101,37 +120,44 @@ public class Opmode2 extends LinearOpMode {
             check if telemetry/rpm switching works
 
              */
-
-            if (y && !prevY && (prevX || prevB)){
-                robot.startShooterAtRPM(rpm);
+            //this doesnt work
+            if (y && !prevY && lastSwitch){
+                robot.autoShootShort(rpm);
+                //find a solution for this
             }else if (y){
-                robot.startShooterAtRPM(SHOOTER_RPM_LONG);
+                robot.autoShootShort(SHOOTER_RPM_SHORT);
+                lastSwitch = false;
             }
-
-            if (y && (prevX || prevB)){
-                robot.startShooterAtRPM(rpm);
-            }
-
-
             if(a && !prevA){
                 robot.stopShooter();
             }
-
 
             prevA = a;
             prevB = b;
             prevY = y;
             prevX = x;
 
-            telemetry.addData("projected rpm", rpm);
-            telemetry.addData("rpm", robot.motorshoot.getVelocity());
-            telemetry.update();
+
+
+            //turret
+
+            if (gamepad2.left_bumper){
+                robot.motorturret.setPower(-0.1);
+            } else if (gamepad2.left_trigger > 0.5){
+                robot.motorturret.setPower(0.1);
+            } else {
+                robot.motorturret.setPower(0);
+            }
+
+
+
 
             idle();
             // --- TELEMETRY ---
             telemetry.addData("intakePower", robot.motorintake.getPower());
             telemetry.addData("shooter velocity", robot.motorshoot.getVelocity());
             telemetry.addData("shooter tpr", robot.motorshoot.getMotorType().getTicksPerRev());
+            telemetry.addData("projected rpm", rpm);
             telemetry.update();
 
         }
@@ -139,6 +165,16 @@ public class Opmode2 extends LinearOpMode {
 
     }
 
+
+
+
+
 }
+
+
+
+
+
+
 
 

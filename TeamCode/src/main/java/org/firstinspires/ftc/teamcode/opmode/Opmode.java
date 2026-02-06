@@ -72,6 +72,7 @@ public class Opmode extends LinearOpMode {
             }
             else if (b && !prevB) {
                 robot.startShooterAtRPM(SHOOTER_RPM_LONG);
+
             }
 
             else if (x && !prevX) {
@@ -93,7 +94,7 @@ public class Opmode extends LinearOpMode {
                 telemetry.addData("shooter velocity", robot.motorshoot.getVelocity());
                 telemetry.addData("shooter tpr", robot.motorshoot.getMotorType().getTicksPerRev());
                 telemetry.update();
-                robot.autoShootShort();
+                robot.autoShootShort(1430);
 
             }
 
@@ -103,7 +104,7 @@ public class Opmode extends LinearOpMode {
                 telemetry.addData("shooter velocity", robot.motorshoot.getVelocity());
                 telemetry.addData("shooter tpr", robot.motorshoot.getMotorType().getTicksPerRev());
                 telemetry.update();
-                robot.autoShootLong();
+                robot.autoShootShort(1785);
             }
             else{
                 robot.stopShooter();
