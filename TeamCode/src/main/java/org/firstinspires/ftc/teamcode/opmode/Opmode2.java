@@ -32,7 +32,7 @@ public class Opmode2 extends LinearOpMode {
     private boolean prevB = false;
     private boolean prevY = false;
     private boolean prevX = false;
-    private boolean lastSwitch = false;
+
 
     private final double SHOOTER_RPM_SHORT = 1400.0; // 28x2786/60 //28
     private final double SHOOTER_RPM_LONG = 1840; //36?
@@ -76,7 +76,7 @@ public class Opmode2 extends LinearOpMode {
 //DRIVING
             double x_dir = gamepad1.left_stick_x * 1.3 * controller1Speed;
             double y_dir = -gamepad1.left_stick_y * 1.3 * controller1Speed;
-            double turn = -gamepad1.right_stick_x * 1.3 * controller1Speed;
+            double turn = gamepad1.right_stick_x * 1.3 * controller1Speed;
 
             double flPower = x_dir + y_dir + turn;
             double blPower = y_dir - x_dir + turn;
@@ -106,11 +106,9 @@ public class Opmode2 extends LinearOpMode {
             if(b && !prevB){
                 rpm += SHOOTER_CHANGE;
                 sleep(50);
-                lastSwitch = true;
             } if(x && !prevX){
                 rpm -= SHOOTER_CHANGE;
                 sleep(50);
-                lastSwitch = true;
             }
             /*
             TO-DO: (jimmy if u see this please help)
@@ -121,12 +119,12 @@ public class Opmode2 extends LinearOpMode {
 
              */
             //this doesnt work
-            if (y && !prevY && lastSwitch){
+            if (y && !prevY){
                 robot.autoShootShort(rpm);
                 //find a solution for this
-            }else if (y){
-                robot.autoShootShort(SHOOTER_RPM_SHORT);
-                lastSwitch = false;
+            }
+            if (gamepad2.right_bumper){
+                robot.autoShootShort(SHOOTER_RPM_LONG);
             }
             if(a && !prevA){
                 robot.stopShooter();
