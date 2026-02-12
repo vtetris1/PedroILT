@@ -50,10 +50,11 @@ public class pidfTest extends LinearOpMode {
         init();
         robot.init(hardwareMap);
         start();
-        double rpm = 6000;
-        double kp = 5.68;
-        double ki = 0.01;
-        double kd = 104;
+        double rpm = 1400;
+        double kp = 305.38;
+        double ki = 0.15;
+        double kd = 0.01;
+        double kf = 11.5;
 
         int selectedState = 0;
         double pidStep = 0.0;
@@ -69,33 +70,44 @@ public class pidfTest extends LinearOpMode {
         while (opModeIsActive()) {
             if(gamepad1.right_bumper){
                 robot.motorshoot.setVelocity(rpm);
+                telemetry.addData("kp", kp);
+                telemetry.addData("ki", ki);
+                telemetry.addData("kd", kd);
+                telemetry.addData("kf", kf);
+                telemetry.addData("pidStep: ", pidStep);
+                telemetry.addData("selectedState: ", selectedState);
+                telemetry.addData("rpm: ", robot.motorshoot.getVelocity());
+                telemetry.update();
             }
-            else if(gamepad1.left_bumper){
-                robot.motorshoot.setVelocity(0);
+            if(gamepad1.right_trigger > 0.5){
+                robot.motorshoot.setVelocity(rpm / 2);
             }
 
-            if (gamepad1.dpad_up && selectedState >= 2) {
+
+
+            if (gamepad1.dpad_up) {
                 selectedState = 0;
-                sleep(500);
-            }
-            else if (gamepad1.dpad_up){
-                selectedState++;
-                sleep(500);
-            }
-            else if (gamepad1.dpad_down && selectedState <= 0) {
-                selectedState = 2;
-                sleep(500);
-            }
-            else if (gamepad1.dpad_down){
-                selectedState--;
                 sleep(500);
             }
 
             else if(gamepad1.dpad_left){
                 selectedState = 1;
+                sleep(500);
             }
 
-            if (gamepad1.dpad_left){
+            else if (gamepad1.dpad_down) {
+                selectedState = 2;
+                sleep(500);
+            }
+
+            else if (gamepad1.dpad_right){
+                selectedState = 3;
+                sleep(500);
+            }
+
+
+
+            if (gamepad1.left_trigger > 0.5){
                 if (selectedState == 0){
                     kp -= pidStep;
                     sleep(500);
@@ -108,8 +120,14 @@ public class pidfTest extends LinearOpMode {
                     kd -= pidStep;
                     sleep(500);
                 }
+
+                else if (selectedState == 3){
+                    kf -= pidStep;
+                    sleep(500);
+                }
+
             }
-            else if (gamepad1.dpad_right){
+            else if (gamepad1.left_bumper){
                 if (selectedState == 0){
                     kp += pidStep;
                     sleep(500);
@@ -122,6 +140,11 @@ public class pidfTest extends LinearOpMode {
                     kd += pidStep;
                     sleep(500);
                 }
+
+                else if (selectedState == 3){
+                    kf -= pidStep;
+                    sleep(500);
+                }
             }
 
 
@@ -132,13 +155,14 @@ public class pidfTest extends LinearOpMode {
 
             robot.motorshoot.setPIDFCoefficients(
                     DcMotor.RunMode.RUN_USING_ENCODER,
-                    new PIDFCoefficients(kp, ki, kd, 0)
+                    new PIDFCoefficients(kp, ki, kd, kf)
             );
 
             idle();
             telemetry.addData("kp", kp);
             telemetry.addData("ki", ki);
             telemetry.addData("kd", kd);
+            telemetry.addData("kf", kf);
             telemetry.addData("pidStep: ", pidStep);
             telemetry.addData("selectedState: ", selectedState);
             telemetry.addData("rpm: ", robot.motorshoot.getVelocity());

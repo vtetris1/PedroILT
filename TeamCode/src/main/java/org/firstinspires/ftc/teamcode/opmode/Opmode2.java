@@ -14,6 +14,8 @@ import java.util.function.Supplier;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.hardware.DcMotor;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
@@ -33,6 +35,7 @@ public class Opmode2 extends LinearOpMode {
     private boolean prevY = false;
     private boolean prevX = false;
 
+    private boolean parkMode = false;
 
     private final double SHOOTER_RPM_SHORT = 1400.0; // 28x2786/60 //28
     private final double SHOOTER_RPM_LONG = 1840; //36?
@@ -101,6 +104,17 @@ public class Opmode2 extends LinearOpMode {
                 robot.motorintake.setPower(0);
             }
 
+            if (gamepad1.right_bumper){
+                robot.servoL.setPower(1);
+                robot.servoR.setPower(-1);
+            } else if (gamepad1.right_trigger > 0.5){
+                robot.servoL.setPower(-1);
+                robot.servoR.setPower(1);
+            } else {
+                robot.servoL.setPower(0);
+                robot.servoR.setPower(0);
+            }
+
             //shooting
 
             if(b && !prevB){
@@ -124,8 +138,13 @@ public class Opmode2 extends LinearOpMode {
                 //find a solution for this
             }
             if (gamepad2.right_bumper){
+                robot.autoShootShort(SHOOTER_RPM_SHORT);
+            }
+
+            if (gamepad2.right_trigger > 0.5){
                 robot.autoShootShort(SHOOTER_RPM_LONG);
             }
+
             if(a && !prevA){
                 robot.stopShooter();
             }
@@ -147,6 +166,20 @@ public class Opmode2 extends LinearOpMode {
                 robot.motorturret.setPower(0);
             }
 
+
+
+
+
+            //elevator
+            if(gamepad1.dpad_up && gamepad2.dpad_left && !parkMode){
+                //robot.elevator.(); negative ticks
+                //2786.2 ticks per rotation
+                robot.elevator.setTargetPosition(-33434);
+                robot.elevator.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.elevator.setPower(0.3);
+
+                parkMode = true;
+            }
 
 
 

@@ -40,6 +40,10 @@ public class robotHardware {
     public DcMotor motorbl = null;
     public DcMotor motorintake = null;
     public DcMotorEx motorturret = null;
+    public CRServo servoL = null;
+    public CRServo servoR = null;
+    //public CRServo pushServo = null;
+    public DcMotor elevator = null;
     //public Limelight3A limelight;
 
     // Use DcMotorEx for shooter so we can control velocity (ticks/sec)
@@ -64,7 +68,11 @@ public class robotHardware {
 
         // get shooter as DcMotorEx to expose velocity control
         motorshoot = hwMap.get(DcMotorEx.class, "shoot");
+        elevator = hwMap.get(DcMotorEx.class, "elevator");
 
+        servoL = hwMap.get(CRServo.class, "servoL");
+        servoR = hwMap.get(CRServo.class, "servoR");
+        //pushServo = hwMap.get(CRServo.class, "pushServo");
         //limelight = hwMap.get(Limelight3A.class, "limelight");
 
 
@@ -83,6 +91,21 @@ public class robotHardware {
 
         motorshoot.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         motorshoot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+
+        double kp = 305.38;
+        double ki = 0.15;
+        double kd = 0.01;
+        double kf = 11.5;
+
+        motorshoot.setPIDFCoefficients(
+                DcMotor.RunMode.RUN_USING_ENCODER,
+                new PIDFCoefficients(kp, ki, kd, kf)
+        );
+
+        elevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        elevator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD;
