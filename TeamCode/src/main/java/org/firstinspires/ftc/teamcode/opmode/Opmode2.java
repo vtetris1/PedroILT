@@ -41,7 +41,7 @@ public class Opmode2 extends LinearOpMode {
     private final double SHOOTER_RPM_LONG = 1840; //36?
     private final double SHOOTER_RPM_CLEAR = -1000;
     private final double SHOOTER_CHANGE = 100;
-    private double rpm = SHOOTER_RPM_LONG;
+    private double rpm = SHOOTER_RPM_SHORT;
 
 
 
@@ -53,7 +53,6 @@ public class Opmode2 extends LinearOpMode {
     private Supplier<PathChain> pathChain;
     private TelemetryManager telemetryM;
     private boolean slowMode = false;
-    private double slowModeMultiplier = 0.5;
 
 
     private long nowMs() {
@@ -89,7 +88,7 @@ public class Opmode2 extends LinearOpMode {
             robot.setDrivePower(flPower, frPower, blPower, brPower);
 
             if (gamepad1.dpad_down) {
-                controller1Speed = 0.3;
+                controller1Speed = 0.2;
             } else {
                 controller1Speed = 1;
             }
@@ -105,11 +104,11 @@ public class Opmode2 extends LinearOpMode {
             }
 
             if (gamepad1.right_bumper){
-                robot.servoL.setPower(1);
-                robot.servoR.setPower(-1);
-            } else if (gamepad1.right_trigger > 0.5){
                 robot.servoL.setPower(-1);
                 robot.servoR.setPower(1);
+            } else if (gamepad1.right_trigger > 0.5){
+                robot.servoL.setPower(1);
+                robot.servoR.setPower(-1);
             } else {
                 robot.servoL.setPower(0);
                 robot.servoR.setPower(0);
@@ -134,15 +133,15 @@ public class Opmode2 extends LinearOpMode {
              */
             //this doesnt work
             if (y && !prevY){
-                robot.autoShootShort(rpm);
+                robot.autoShoot(rpm);
                 //find a solution for this
             }
             if (gamepad2.right_bumper){
-                robot.autoShootShort(SHOOTER_RPM_SHORT);
+                robot.autoShoot(SHOOTER_RPM_SHORT);
             }
 
             if (gamepad2.right_trigger > 0.5){
-                robot.autoShootShort(SHOOTER_RPM_LONG);
+                robot.autoShoot(SHOOTER_RPM_LONG);
             }
 
             if(a && !prevA){
@@ -159,9 +158,9 @@ public class Opmode2 extends LinearOpMode {
             //turret
 
             if (gamepad2.left_bumper){
-                robot.motorturret.setPower(-0.1);
-            } else if (gamepad2.left_trigger > 0.5){
-                robot.motorturret.setPower(0.1);
+                robot.motorturret.setPower(0.7);
+            } else if (gamepad2.left_trigger > 0.8){
+                robot.motorturret.setPower(-0.7);
             } else {
                 robot.motorturret.setPower(0);
             }
@@ -171,12 +170,15 @@ public class Opmode2 extends LinearOpMode {
 
 
             //elevator
-            if(gamepad1.dpad_up && gamepad2.dpad_left && !parkMode){
+            if(gamepad1.dpad_down && gamepad2.dpad_left && !parkMode){
                 //robot.elevator.(); negative ticks
                 //2786.2 ticks per rotation
+                robot.elevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                robot.elevator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 robot.elevator.setTargetPosition(-33434);
                 robot.elevator.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                robot.elevator.setPower(0.3);
+                robot.elevator.setPower(0.7);
 
                 parkMode = true;
             }

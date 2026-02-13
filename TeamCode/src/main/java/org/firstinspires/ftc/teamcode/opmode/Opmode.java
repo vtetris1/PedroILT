@@ -94,7 +94,7 @@ public class Opmode extends LinearOpMode {
                 telemetry.addData("shooter velocity", robot.motorshoot.getVelocity());
                 telemetry.addData("shooter tpr", robot.motorshoot.getMotorType().getTicksPerRev());
                 telemetry.update();
-                robot.autoShootShort(1430);
+                robot.autoShoot(1430);
 
             }
 
@@ -104,7 +104,7 @@ public class Opmode extends LinearOpMode {
                 telemetry.addData("shooter velocity", robot.motorshoot.getVelocity());
                 telemetry.addData("shooter tpr", robot.motorshoot.getMotorType().getTicksPerRev());
                 telemetry.update();
-                robot.autoShootShort(1785);
+                robot.autoShoot(1785);
             }
             else{
                 robot.stopShooter();

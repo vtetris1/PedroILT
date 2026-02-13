@@ -199,8 +199,8 @@ public class robotHardware {
         motorshoot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
-    public void autoShootShort(double rpm){
-        startShooterAtRPM(rpm + 50);
+    public void autoShoot(double rpm){
+        startShooterAtRPM(rpm + 100);
         if(motorshoot.getVelocity() > rpm){
             motorintake.setPower(-1.0);
             telemetry.addData("shooter velocity", motorshoot.getVelocity());
