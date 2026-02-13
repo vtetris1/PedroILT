@@ -37,8 +37,8 @@ public class Opmode2 extends LinearOpMode {
 
     private boolean parkMode = false;
 
-    private final double SHOOTER_RPM_SHORT = 1400.0; // 28x2786/60 //28
-    private final double SHOOTER_RPM_LONG = 1840; //36?
+    private final double SHOOTER_RPM_SHORT = 1500.0; // 28x2786/60 //28
+    private final double SHOOTER_RPM_LONG = 1940; //36?
     private final double SHOOTER_RPM_CLEAR = -1000;
     private final double SHOOTER_CHANGE = 100;
     private double rpm = SHOOTER_RPM_SHORT;
@@ -170,16 +170,17 @@ public class Opmode2 extends LinearOpMode {
 
 
             //elevator
-            if(gamepad1.dpad_down && gamepad2.dpad_left && !parkMode){
+            if(gamepad2.left_trigger > 0.8 && gamepad2.dpad_left && !parkMode){
                 //robot.elevator.(); negative ticks
                 //2786.2 ticks per rotation
                 robot.elevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 robot.elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                 robot.elevator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                telemetry.addData("park mode!!!!", robot.elevator.getCurrentPosition());
+                telemetry.update();
                 robot.elevator.setTargetPosition(-33434);
                 robot.elevator.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 robot.elevator.setPower(0.7);
-
                 parkMode = true;
             }
 

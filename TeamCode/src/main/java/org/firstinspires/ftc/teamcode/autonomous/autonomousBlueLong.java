@@ -14,8 +14,8 @@ public class autonomousBlueLong extends LinearOpMode {
     // Motor encoder parameter
     double ticksPerInch = 31.3;
     double ticksPerDegree = 15.6;
-    private final double SHOOTER_RPM_SHORT = 1400.0; // 28x2786/60 //28
-    private final double SHOOTER_RPM_LONG = 1840;
+    private final double SHOOTER_RPM_SHORT = 1500.0; // 28x2786/60 //28
+    private final double SHOOTER_RPM_LONG = 1940;
     private int target = 100;
 
     @Override
