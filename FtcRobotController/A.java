@@ -1,0 +1,1 @@
+	both left & right joysticks up, 
