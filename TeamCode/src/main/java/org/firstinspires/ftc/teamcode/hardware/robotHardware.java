@@ -229,7 +229,7 @@ public class robotHardware {
     public void startShooterAtRPM(double rpm) {
         if (motorshoot == null) return;
         // convert RPM to ticks/sec
-        double ticksPerRev = 56; //FIX  2786
+        double ticksPerRev = 28; //FIX  2786
         double ticksPerSec = ticksPerRev * rpm / 60.0;
         motorshoot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorshoot.setVelocity(ticksPerSec);

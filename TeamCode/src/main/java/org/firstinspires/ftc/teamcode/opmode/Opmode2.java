@@ -37,10 +37,10 @@ public class Opmode2 extends LinearOpMode {
 
     private boolean parkMode = false;
 
-    private final double SHOOTER_RPM_SHORT = 1500.0; // 28x2786/60 //28
-    private final double SHOOTER_RPM_LONG = 1940; //36?
+    private final double SHOOTER_RPM_SHORT = 3000.0; // 28x2786/60 //28
+    private final double SHOOTER_RPM_LONG = 3880; //36?
     private final double SHOOTER_RPM_CLEAR = -1000;
-    private final double SHOOTER_CHANGE = 100;
+    private final double SHOOTER_CHANGE = 200;
     private double rpm = SHOOTER_RPM_SHORT;
 
 

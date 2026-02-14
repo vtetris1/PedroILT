@@ -87,7 +87,7 @@ public class AutoHardware2 extends LinearOpMode {
         LAUNCHING,  // trigger SHOOT state
         LAUNCHED,   // trigger back to READY
     }
-    // 🔹 UPDATED STATE MACHINE
+
     private LAUNCH_STATES launchState = LAUNCH_STATES.IDLE;
 
     public double ticksPerInch = 31.3;
@@ -227,7 +227,7 @@ public class AutoHardware2 extends LinearOpMode {
     public void startShooterAtRPM(double rpm) {
         if (motorshoot == null) return;
         // convert RPM to ticks/sec
-        double ticksPerRev = 56; //FIX  2786
+        double ticksPerRev = 28; //FIX  2786
         double ticksPerSec = ticksPerRev * rpm / 60.0;
         motorshoot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorshoot.setVelocity(ticksPerSec);
@@ -367,38 +367,16 @@ public class AutoHardware2 extends LinearOpMode {
                 launchState = LAUNCH_STATES.LAUNCHING;
                 turnOnIntakeSubsystem();
                 shootTimer.reset();
-                /*
-                trigger.setPosition(TRIGGER_SHOOT);
-                triggerShootTimer.reset();*/
                 break;
             case LAUNCHING:
                 if (shootTimer.seconds() > TOTAL_SHOOT_TIME) {
                     launchState = LAUNCH_STATES.LAUNCHED;
-                    /*
-                    trigger.setPosition(TRIGGER_READY);
-                    triggerReadyTimer.reset();*/
                 }
                 break;
             case LAUNCHED:
                 turnOffIntakeSubsystem();
                 bShootRequested = false;
                 launchState = LAUNCH_STATES.IDLE;
-                /*
-
-                if (triggerReadyTimer.seconds() > TRIGGER_READY_TIME
-                        || ((countShots == (numShots - 1))
-                        && triggerReadyTimer.seconds() > LAST_TRIGGER_READY_TIME)) {
-                    countShots ++;
-                    triggerReadyTimer.reset();
-                    if (countShots >= numShots) {
-                        // Finished all shots. Stop shooting...
-                        bShootRequested = false;
-                        launchState = LAUNCH_STATES.IDLE;
-                    } else {
-                        launchState = LAUNCH_STATES.LAUNCH;
-                    }
-                }
-                 */
                 break;
         }
         if (bShootRequested) {
@@ -441,5 +419,118 @@ public class AutoHardware2 extends LinearOpMode {
                 break;
         }
     }
+
+    public void turnToTargetYaw(double targetYawDegree, double power, long maxAllowedTimeInMills) {
+        long timeBegin, timeCurrent;
+        double currentYaw = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+        int ticks, tickDirection;
+        double factor = 1.0;
+
+        double diffYaw = Math.abs(currentYaw - targetYawDegree);
+        telemetry.addLine(String.format("\nCurrentYaw=%.2f\nTargetYaw=%.2f", currentYaw, targetYawDegree));
+        telemetry.update();
+
+        timeBegin = timeCurrent = System.currentTimeMillis();
+        while (diffYaw > 0.5
+                && opModeIsActive()
+                && ((timeCurrent - timeBegin) < maxAllowedTimeInMills)) {
+            ticks = (int) (diffYaw * ticksPerDegree);
+            if (ticks > 220)
+                ticks = 220;
+
+            tickDirection = (currentYaw < targetYawDegree) ? -1 : 1;
+            if (ticks < 1)
+                break;
+            if (diffYaw > 3)
+                factor = 1.0;
+            else
+                factor = diffYaw / 3;
+            driveMotors(
+                    tickDirection * ticks,
+                    tickDirection * ticks,
+                    tickDirection * ticks,
+                    tickDirection * ticks,
+                    power * factor, false, 0);
+            currentYaw = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            timeCurrent = System.currentTimeMillis();
+            diffYaw = Math.abs(currentYaw - targetYawDegree);
+
+            telemetry.addLine(String.format("\nCurrentYaw=%.2f\nTargetYaw=%.2f\nTimeLapsed=%.2f ms",
+                    currentYaw, targetYawDegree, (double) (timeCurrent - timeBegin)));
+            telemetry.update();
+        }
+    }
+
+    public void driveStrafe(int flTarget, int blTarget, int frTarget, int brTarget,
+                             double power,
+                             boolean bKeepYaw, double targetYaw) {
+        double currentYaw;
+        double powerDeltaPct, powerL, powerR;
+        int direction;
+
+        motorfl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorbl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorfr.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorbr.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        motorfl.setTargetPosition(flTarget);
+        motorbl.setTargetPosition(blTarget);
+        motorfr.setTargetPosition(frTarget);
+        motorbr.setTargetPosition(brTarget);
+
+        motorfl.setPower(power);
+        motorbl.setPower(-power);
+        motorfr.setPower(-power);
+        motorbr.setPower(power);
+
+        motorfl.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorbl.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorfr.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorbr.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // Defensive programming.
+        // Use bKeepYaw only when all targets are the same, meaning moving in a straight line
+        if (!((flTarget == blTarget)
+                && (flTarget == frTarget)
+                && (flTarget == brTarget)))
+            bKeepYaw = false;
+        direction = (flTarget > 0) ? 1 : -1;
+        while (opModeIsActive() &&
+                (motorfl.isBusy() &&
+                        motorbl.isBusy() &&
+                        motorfr.isBusy() &&
+                        motorbr.isBusy())) {
+            if (bKeepYaw) {
+
+                currentYaw = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+                if (Math.abs(currentYaw - targetYaw) > 2.0)
+                    powerDeltaPct = 0.25;
+                else
+                    powerDeltaPct = Math.abs(currentYaw - targetYaw) / 2.0 * 0.25;
+                if (currentYaw < targetYaw) {
+                    powerL = power * (1 - direction * powerDeltaPct);
+                    powerR = power * (1 + direction * powerDeltaPct);
+                } else {
+                    powerL = power * (1 + direction * powerDeltaPct);
+                    powerR = power * (1 - direction * powerDeltaPct);
+                }
+                if (powerL > 1.0)
+                    powerL = 1.0;
+                if (powerR > 1.0)
+                    powerR = 1.0;
+                motorfl.setPower(powerL);
+                motorbl.setPower(powerL);
+                motorfr.setPower(powerR);
+                motorbr.setPower(powerR);
+            }
+            idle();
+        }
+
+        motorfl.setPower(0);
+        motorbl.setPower(0);
+        motorfr.setPower(0);
+        motorbr.setPower(0);
+    }
+
 }
 

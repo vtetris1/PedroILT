@@ -52,19 +52,13 @@ public class Opmode4 extends LinearOpMode {
     static final double TICKS_PER_REVOLUTION = 28.0;
     static final double MAX_TICKS_PER_SEC = 2800.0;
 
-    final double HOGBACK_TARGET_INIT_RPM = 3200;    // RPM: Rotations Per Minute
-    final double HOGBACK_TARGET_RANGE = 100;
-
-    private double hogback_target_rpm = HOGBACK_TARGET_INIT_RPM;
-    private double hogback_target_ticks = hogback_target_rpm * TICKS_PER_REVOLUTION / 60;
-    private double hogback_target_ticks_low= (hogback_target_rpm - HOGBACK_TARGET_RANGE) * TICKS_PER_REVOLUTION / 60;
 
 
 
-    private final double SHOOTER_RPM_SHORT = 1500.0; // 28x2786/60 //28
-    private final double SHOOTER_RPM_LONG = 1940; //36?
+    private final double SHOOTER_RPM_SHORT = 3000.0; // 28x2786/60 //28
+    private final double SHOOTER_RPM_LONG = 3880; //36?
     private final double SHOOTER_RPM_CLEAR = -1000;
-    private final double SHOOTER_CHANGE = 100;
+    private final double SHOOTER_CHANGE = 200;
     private double rpm = SHOOTER_RPM_SHORT;
 
 
@@ -180,14 +174,6 @@ public class Opmode4 extends LinearOpMode {
                 sleep(50);  // this is a blocking call which should be avoided in teleop mode.
             }
 
-            /*
-            TO-DO: (jimmy if u see this please help)
-            make a mode for shooting short vs shooting long
-            debug shooting part
-            turret programming
-            check if telemetry/rpm switching works
-             */
-            //this doesnt work
             if (y && !prevY){
                 robot.autoShoot(rpm);
                 //find a solution for this
