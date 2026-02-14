@@ -58,7 +58,6 @@ public class autonomousBlueLong extends LinearOpMode {
                              boolean bKeepYaw, double targetYaw) {
         double currentYaw;
         double powerDeltaPct, powerL, powerR;
-        double leftRatioToCounterCOG = 0.95;
         int direction;
 
         robot.motorfl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -71,8 +70,8 @@ public class autonomousBlueLong extends LinearOpMode {
         robot.motorfr.setTargetPosition(frTarget);
         robot.motorbr.setTargetPosition(brTarget);
 
-        robot.motorfl.setPower(power * leftRatioToCounterCOG);
-        robot.motorbl.setPower(power * leftRatioToCounterCOG);
+        robot.motorfl.setPower(power);
+        robot.motorbl.setPower(power);
         robot.motorfr.setPower(power);
         robot.motorbr.setPower(power);
 

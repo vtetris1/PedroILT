@@ -1,19 +1,16 @@
-package org.firstinspires.ftc.teamcode.hardware;
+package org.firstinspires.ftc.teamcode.autonomous;
 
-
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 
 import static java.lang.Thread.sleep;
 
-import com.bylazar.field.Line;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -27,7 +24,7 @@ import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 */
 
-public class robotHardware {
+public class AutoHardware2 extends LinearOpMode {
     HardwareMap hwMap =  null;
 
     public IMU imu;
@@ -91,7 +88,7 @@ public class robotHardware {
         LAUNCHED,   // trigger back to READY
     }
     // 🔹 UPDATED STATE MACHINE
-    private LAUNCH_STATES launchState;
+    private LAUNCH_STATES launchState = LAUNCH_STATES.IDLE;
 
     public double ticksPerInch = 31.3;
     public double ticksPerDegree = 12;
@@ -101,7 +98,9 @@ public class robotHardware {
     static final double TOTAL_SHOOT_TIME = 15;
 
 
-    public robotHardware() {}
+    public AutoHardware2() {}
+    public void runOpMode() throws InterruptedException {
+    }
 
     public void init(HardwareMap ahwMap)    {
         hwMap = ahwMap;
@@ -143,7 +142,6 @@ public class robotHardware {
         double ki = 0.15;
         double kd = 0.01;
         double kf = 11.5;
-
         motorshoot.setPIDFCoefficients(
                 DcMotor.RunMode.RUN_USING_ENCODER,
                 new PIDFCoefficients(kp, ki, kd, kf)
@@ -256,7 +254,7 @@ public class robotHardware {
             telemetry.addData("shooter tpr", motorshoot.getMotorType().getTicksPerRev());
             telemetry.addData("projected rpm", rpm);
             telemetry.update();
-            // sleep(400);
+            sleep(400);
             motorintake.setPower(0.0);
 
 
@@ -412,6 +410,7 @@ public class robotHardware {
             motorshoot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             launchState = LAUNCH_STATES.IDLE;
         }
+
         telemetry.addData("State", launchState);
         telemetry.addData("shooter Velocity Target (RPM)", shooter_target_rpm);
         telemetry.addData("shooter Velocity Actual (RPM)",
@@ -432,6 +431,15 @@ public class robotHardware {
     }
     public boolean isShootRequested() {
         return bShootRequested;
+    }
+    public void triggerShoot(int numShots) {
+        bShootRequested = true;
+        countShots = 0;
+        while (opModeIsActive()) {
+            launch(numShots);
+            if (!bShootRequested)
+                break;
+        }
     }
 }
 
