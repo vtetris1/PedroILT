@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -39,6 +40,7 @@ public class robotHardware {
     public DcMotorEx motorturret = null;
     public CRServo servoL = null;
     public CRServo servoR = null;
+    public Servo trigger = null;
     //public CRServo pushServo = null;
     public DcMotor elevator = null;
     //public Limelight3A limelight;
@@ -74,8 +76,8 @@ public class robotHardware {
     static final double TICKS_PER_INCH = (TICKS_DRIVE_PER_REVOLUTION * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
 
-    static final double TRIGGER_READY = 0.5150;
-    static final double TRIGGER_SHOOT = 0.4825;
+    static final double TRIGGER_READY = 0.7;
+    static final double TRIGGER_SHOOT = 0.2;
     boolean bShootRequested = false;
     int countShots = 0;
 
@@ -119,6 +121,7 @@ public class robotHardware {
 
         servoL = hwMap.get(CRServo.class, "servoL");
         servoR = hwMap.get(CRServo.class, "servoR");
+        trigger = hwMap.get(Servo.class, "trigger");
         //pushServo = hwMap.get(CRServo.class, "pushServo");
         //limelight = hwMap.get(Limelight3A.class, "limelight");
 
@@ -165,8 +168,8 @@ public class robotHardware {
         orientation0 = imu.getRobotYawPitchRollAngles();
         angularVelocity0 = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
         yaw0 = orientation0.getYaw(AngleUnit.DEGREES);
-
         shootTimer.reset();
+        trigger.setPosition(TRIGGER_READY);
     }
 
     public void setAutoDriveMotorMode() {
@@ -258,8 +261,6 @@ public class robotHardware {
             telemetry.update();
             // sleep(400);
             motorintake.setPower(0.0);
-
-
         }
     }
     public void setShooterTargetRpm(double target_rpm) {

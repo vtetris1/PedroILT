@@ -65,8 +65,14 @@ public class Opmode4 extends LinearOpMode {
 
     private double controller1Speed = 1.0;
     ElapsedTime controller1SpeedChangeTimer = new ElapsedTime();
-    static final double SPEED_CHANGE_TIME = 0.15; // seconds to handle physical button/key natural time
 
+    ElapsedTime triggerTimer = new ElapsedTime();
+    static final double TRIGGER_READY = 0.6;
+    static final double TRIGGER_SHOOT = 0.2;
+    static final double TRIGGER_SHOOT_TIME = 0.5;
+
+    static final double SPEED_CHANGE_TIME = 0.15; // seconds to handle physical button/key natural time
+    boolean bTriggerEnabled = false;
     private Follower follower;
     public static Pose startingPose; //See ExampleAuto to understand how to use this
     private boolean automatedDrive;
@@ -87,6 +93,7 @@ public class Opmode4 extends LinearOpMode {
         waitForStart();
 
         controller1SpeedChangeTimer.reset();
+        triggerTimer.reset();
 
         while (opModeIsActive()) {
             boolean a = gamepad2.a;
@@ -181,8 +188,7 @@ public class Opmode4 extends LinearOpMode {
             if (gamepad2.right_bumper){
                 robot.autoShoot(SHOOTER_RPM_SHORT);
             }
-
-            if (gamepad2.right_trigger > 0.5){
+            else if (gamepad2.right_trigger > 0.5){
                 robot.autoShoot(SHOOTER_RPM_LONG);
             }
 
@@ -203,6 +209,22 @@ public class Opmode4 extends LinearOpMode {
             } else {
                 robot.motorturret.setPower(0);
             }
+
+            // trigger to launch the single artifact
+            if (gamepad2.dpad_up) {
+                if (triggerTimer.seconds() >= TRIGGER_SHOOT_TIME) {
+                    triggerTimer.reset();
+                    robot.trigger.setPosition(TRIGGER_SHOOT);
+                    bTriggerEnabled = true;
+                }
+            }
+            else {
+                if (bTriggerEnabled && triggerTimer.seconds() >= TRIGGER_SHOOT_TIME) {
+                    robot.trigger.setPosition(TRIGGER_READY);
+                    bTriggerEnabled = false;
+                }
+            }
+
 
             //elevator
             runElevatorStateMachine();

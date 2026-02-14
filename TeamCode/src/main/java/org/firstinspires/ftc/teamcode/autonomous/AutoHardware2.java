@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -36,6 +37,7 @@ public class AutoHardware2 extends LinearOpMode {
     public DcMotorEx motorturret = null;
     public CRServo servoL = null;
     public CRServo servoR = null;
+    public Servo trigger = null;
     //public CRServo pushServo = null;
     public DcMotor elevator = null;
     //public Limelight3A limelight;
@@ -53,7 +55,7 @@ public class AutoHardware2 extends LinearOpMode {
     static final double TICKS_PER_REVOLUTION = 28.0;
 
     final double SHOOTER_TARGET_INIT_RPM = 2400;    // RPM: Rotations Per Minute
-    final double SHOOTER_TARGET_RANGE = 100;
+    final double SHOOTER_TARGET_RANGE = 50;
 
 
     static final double MAX_TICKS_PER_SEC = 2800.0;
@@ -62,6 +64,11 @@ public class AutoHardware2 extends LinearOpMode {
     private double shooter_target_ticks = shooter_target_rpm * TICKS_PER_REVOLUTION / 60;
     private double shooter_target_ticks_low = (shooter_target_rpm - SHOOTER_TARGET_RANGE) * TICKS_PER_REVOLUTION / 60;
 
+    /* The rpm is too high when shooting the artifact from the near side.
+     * Hence, lower the target rpm when shooting the last artifact on near side.
+     */
+    private double shooter_target_rpm_last_artifact = SHOOTER_TARGET_INIT_RPM;
+    private double shooter_target_ticks_last_artifact = shooter_target_rpm * TICKS_PER_REVOLUTION / 60;
 
 
     // For motot encoders
@@ -71,20 +78,22 @@ public class AutoHardware2 extends LinearOpMode {
     static final double TICKS_PER_INCH = (TICKS_DRIVE_PER_REVOLUTION * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
 
-    static final double TRIGGER_READY = 0.5150;
-    static final double TRIGGER_SHOOT = 0.4825;
+    static final double TRIGGER_READY = 0.7;
+    static final double TRIGGER_SHOOT = 0.2;
     boolean bShootRequested = false;
     int countShots = 0;
 
     ElapsedTime triggerShootTimer = new ElapsedTime();
     ElapsedTime triggerReadyTimer = new ElapsedTime();
+    ElapsedTime secondStageTimer = new ElapsedTime();
     ElapsedTime shootTimer = new ElapsedTime();
 
     public enum LAUNCH_STATES {
         IDLE,
         SPIN_UP,
         LAUNCH,
-        LAUNCHING,  // trigger SHOOT state
+        LAUNCHING_2ND_STAGE,  // trigger 2nd stage intake
+        LAUNCHING_FINAL,  // trigger 2nd stage & 1st stage intake
         LAUNCHED,   // trigger back to READY
     }
 
@@ -95,7 +104,9 @@ public class AutoHardware2 extends LinearOpMode {
     static final double TRIGGER_SHOOT_TIME = 0.5;
     static final double TRIGGER_READY_TIME = 5;
     static final double LAST_TRIGGER_READY_TIME = 2;
-    static final double TOTAL_SHOOT_TIME = 15;
+    static final double SECOND_STAGE_TIME = 2;
+    static final double SHOOT_TIME_2_ARTIFACTS = 13;
+    static final double SHOOT_TIME_TOTAL = 18;
 
 
     public AutoHardware2() {}
@@ -118,9 +129,9 @@ public class AutoHardware2 extends LinearOpMode {
 
         servoL = hwMap.get(CRServo.class, "servoL");
         servoR = hwMap.get(CRServo.class, "servoR");
+        trigger = hwMap.get(Servo.class, "trigger");
         //pushServo = hwMap.get(CRServo.class, "pushServo");
         //limelight = hwMap.get(Limelight3A.class, "limelight");
-
 
         //front right motor no encoder
 
@@ -132,9 +143,7 @@ public class AutoHardware2 extends LinearOpMode {
         motorbl.setDirection(DcMotor.Direction.REVERSE);
         motorintake.setDirection(DcMotor.Direction.REVERSE);
 
-
         setDrivetrainMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
         motorshoot.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         motorshoot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
@@ -164,6 +173,7 @@ public class AutoHardware2 extends LinearOpMode {
         angularVelocity0 = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
         yaw0 = orientation0.getYaw(AngleUnit.DEGREES);
 
+        trigger.setPosition(TRIGGER_READY);
         shootTimer.reset();
     }
 
@@ -260,12 +270,15 @@ public class AutoHardware2 extends LinearOpMode {
 
         }
     }
-    public void setShooterTargetRpm(double target_rpm) {
+    public void setShooterTargetRpm(double target_rpm, double target_rpm_last_artifact) {
         shooter_target_rpm = target_rpm;
         shooter_target_ticks = Math.max(0, Math.min(MAX_TICKS_PER_SEC,
                 shooter_target_rpm * TICKS_PER_REVOLUTION / 60));
         shooter_target_ticks_low = Math.max(0, Math.min(MAX_TICKS_PER_SEC,
                 (shooter_target_rpm - SHOOTER_TARGET_RANGE) * TICKS_PER_REVOLUTION / 60));
+        shooter_target_rpm_last_artifact = target_rpm_last_artifact;
+        shooter_target_ticks_last_artifact = Math.max(0, Math.min(MAX_TICKS_PER_SEC,
+                shooter_target_rpm_last_artifact * TICKS_PER_REVOLUTION / 60));
     }
 
     public void driveMotors(int flTarget, int blTarget, int frTarget, int brTarget,
@@ -338,6 +351,14 @@ public class AutoHardware2 extends LinearOpMode {
     }
 
 
+    // Run 2nd stage intake first to prevent artifact stuck at 2nd stage.
+    public void turnOnIntake1stStage() {
+        motorintake.setPower(-1.0);
+    }
+    public void turnOnIntake2ndStage() {
+        servoL.setPower(-1.0);
+        servoR.setPower(1.0);
+    }
     public void turnOnIntakeSubsystem() {
         motorintake.setPower(-1.0);
         servoL.setPower(-1.0);
@@ -350,6 +371,7 @@ public class AutoHardware2 extends LinearOpMode {
     }
 
     public void launch(int numShots) {
+        double target_ticks = shooter_target_ticks;
         switch (launchState) {
             case IDLE:
                 if (bShootRequested) {
@@ -364,13 +386,29 @@ public class AutoHardware2 extends LinearOpMode {
                 }
                 break;
             case LAUNCH:
-                launchState = LAUNCH_STATES.LAUNCHING;
-                turnOnIntakeSubsystem();
-                shootTimer.reset();
+                turnOnIntake2ndStage();
+                secondStageTimer.reset();
+                launchState = LAUNCH_STATES.LAUNCHING_2ND_STAGE;
                 break;
-            case LAUNCHING:
-                if (shootTimer.seconds() > TOTAL_SHOOT_TIME) {
+            case LAUNCHING_2ND_STAGE:
+                if (secondStageTimer.seconds() > SECOND_STAGE_TIME) {
+                    turnOnIntake1stStage();
+                    shootTimer.reset();
+                    launchState = LAUNCH_STATES.LAUNCHING_FINAL;
+                }
+                break;
+            case LAUNCHING_FINAL:
+                // always turn intake subsystem to potential overcome stuck issue
+                turnOnIntakeSubsystem();
+
+                double shootTimeSeconds = shootTimer.seconds();
+                if (shootTimeSeconds > SHOOT_TIME_TOTAL) {
                     launchState = LAUNCH_STATES.LAUNCHED;
+                    trigger.setPosition(TRIGGER_READY);
+                } else if (shootTimeSeconds > SHOOT_TIME_2_ARTIFACTS) {
+                    // Initiate trigger so that the last artifact can be fed into the shooter
+                    trigger.setPosition(TRIGGER_SHOOT);
+                    target_ticks = shooter_target_ticks_last_artifact;
                 }
                 break;
             case LAUNCHED:
@@ -380,7 +418,7 @@ public class AutoHardware2 extends LinearOpMode {
                 break;
         }
         if (bShootRequested) {
-            motorshoot.setVelocity(shooter_target_ticks);
+            motorshoot.setVelocity(target_ticks);
             motorshoot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
         else {
@@ -448,8 +486,8 @@ public class AutoHardware2 extends LinearOpMode {
             driveMotors(
                     tickDirection * ticks,
                     tickDirection * ticks,
-                    tickDirection * ticks,
-                    tickDirection * ticks,
+                    -tickDirection * ticks,
+                    -tickDirection * ticks,
                     power * factor, false, 0);
             currentYaw = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
             timeCurrent = System.currentTimeMillis();
