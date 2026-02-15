@@ -105,8 +105,8 @@ public class AutoHardware2 extends LinearOpMode {
     static final double TRIGGER_READY_TIME = 5;
     static final double LAST_TRIGGER_READY_TIME = 2;
     static final double SECOND_STAGE_TIME = 2;
-    static final double SHOOT_TIME_2_ARTIFACTS = 13;
-    static final double SHOOT_TIME_TOTAL = 18;
+    static final double SHOOT_TIME_2_ARTIFACTS = 8;
+    static final double SHOOT_TIME_TOTAL = 12;
 
 
     public AutoHardware2() {}
