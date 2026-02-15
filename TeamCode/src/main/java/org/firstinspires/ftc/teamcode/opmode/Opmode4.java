@@ -202,12 +202,23 @@ public class Opmode4 extends LinearOpMode {
             prevX = x;
 
             //turret
-            if (gamepad2.left_bumper){
-                robot.motorturret.setPower(0.7);
-            } else if (gamepad2.left_trigger > 0.8){
-                robot.motorturret.setPower(-0.7);
+            if (gamepad2.dpad_left){
+                robot.motorturret.setPower(0.5);
+            } else if (gamepad2.dpad_right){
+                robot.motorturret.setPower(-0.5);
             } else {
                 robot.motorturret.setPower(0);
+            }
+
+            if (gamepad2.left_bumper){
+                robot.servoL.setPower(-1);
+                robot.servoR.setPower(1);
+            } else if (gamepad2.left_trigger > 0.8){
+                robot.servoL.setPower(1);
+                robot.servoR.setPower(-1);
+            } else {
+                robot.servoL.setPower(0);
+                robot.servoR.setPower(0);
             }
 
             // trigger to launch the single artifact
@@ -218,12 +229,20 @@ public class Opmode4 extends LinearOpMode {
                     bTriggerEnabled = true;
                 }
             }
+
+            else if(gamepad2.dpad_down) {
+                robot.trigger.setPosition(TRIGGER_READY);
+                bTriggerEnabled = false;
+            }
+
             else {
                 if (bTriggerEnabled && triggerTimer.seconds() >= TRIGGER_SHOOT_TIME) {
                     robot.trigger.setPosition(TRIGGER_READY);
                     bTriggerEnabled = false;
                 }
             }
+
+
 
 
             //elevator

@@ -260,8 +260,8 @@ public class robotHardware {
             telemetry.addData("projected rpm", rpm);
             telemetry.update();
             // sleep(400);
-            motorintake.setPower(0.0);
         }
+        motorintake.setPower(0.0);
     }
     public void setShooterTargetRpm(double target_rpm) {
         shooter_target_rpm = target_rpm;
