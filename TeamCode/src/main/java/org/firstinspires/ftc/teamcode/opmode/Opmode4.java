@@ -159,16 +159,6 @@ public class Opmode4 extends LinearOpMode {
                 robot.motorintake.setPower(0);
             }
 
-            if (gamepad1.right_bumper){
-                robot.servoL.setPower(-1);
-                robot.servoR.setPower(1);
-            } else if (gamepad1.right_trigger > 0.5){
-                robot.servoL.setPower(1);
-                robot.servoR.setPower(-1);
-            } else {
-                robot.servoL.setPower(0);
-                robot.servoR.setPower(0);
-            }
 
             //shooting
 
@@ -182,14 +172,14 @@ public class Opmode4 extends LinearOpMode {
             }
 
             if (y && !prevY){
-                robot.autoShoot(rpm);
+                robot.autoShoot(SHOOTER_RPM_SHORT - 100);
                 //find a solution for this
             }
             if (gamepad2.right_bumper){
-                robot.autoShoot(SHOOTER_RPM_SHORT);
+                robot.autoShoot(SHOOTER_RPM_LONG);
             }
             else if (gamepad2.right_trigger > 0.5){
-                robot.autoShoot(SHOOTER_RPM_LONG);
+                robot.motorshoot.setVelocity(SHOOTER_RPM_CLEAR);
             }
 
             if(a && !prevA){
@@ -210,16 +200,6 @@ public class Opmode4 extends LinearOpMode {
                 robot.motorturret.setPower(0);
             }
 
-            if (gamepad2.left_bumper){
-                robot.servoL.setPower(-1);
-                robot.servoR.setPower(1);
-            } else if (gamepad2.left_trigger > 0.8){
-                robot.servoL.setPower(1);
-                robot.servoR.setPower(-1);
-            } else {
-                robot.servoL.setPower(0);
-                robot.servoR.setPower(0);
-            }
 
             // trigger to launch the single artifact
             if (gamepad2.dpad_up) {
