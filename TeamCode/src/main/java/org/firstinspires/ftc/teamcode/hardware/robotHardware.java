@@ -38,9 +38,7 @@ public class robotHardware {
     public DcMotor motorbl = null;
     public DcMotor motorintake = null;
     public DcMotorEx motorturret = null;
-    public CRServo servoL = null;
-    public CRServo servoR = null;
-    public Servo trigger = null;
+    public Servo gate = null;
     //public CRServo pushServo = null;
     public DcMotor elevator = null;
     //public Limelight3A limelight;
@@ -76,8 +74,8 @@ public class robotHardware {
     static final double TICKS_PER_INCH = (TICKS_DRIVE_PER_REVOLUTION * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
 
-    static final double TRIGGER_READY = 0.7;
-    static final double TRIGGER_SHOOT = 0.2;
+    static final double GATE_READY = 0.25; //0.7
+    static final double GATE_SHOOT = 0.6; //0.2
     boolean bShootRequested = false;
     int countShots = 0;
 
@@ -119,9 +117,7 @@ public class robotHardware {
         motorshoot = hwMap.get(DcMotorEx.class, "shoot");
         elevator = hwMap.get(DcMotorEx.class, "elevator");
 
-        servoL = hwMap.get(CRServo.class, "servoL");
-        servoR = hwMap.get(CRServo.class, "servoR");
-        trigger = hwMap.get(Servo.class, "trigger");
+        gate = hwMap.get(Servo.class, "gate");
         //pushServo = hwMap.get(CRServo.class, "pushServo");
         //limelight = hwMap.get(Limelight3A.class, "limelight");
 
@@ -133,8 +129,8 @@ public class robotHardware {
         motorbr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorbl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorfl.setDirection(DcMotor.Direction.REVERSE);
+        motorfr.setDirection(DcMotor.Direction.REVERSE);
         motorbl.setDirection(DcMotor.Direction.REVERSE);
-        motorintake.setDirection(DcMotor.Direction.REVERSE);
 
 
         setDrivetrainMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -169,7 +165,7 @@ public class robotHardware {
         angularVelocity0 = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
         yaw0 = orientation0.getYaw(AngleUnit.DEGREES);
         shootTimer.reset();
-        trigger.setPosition(TRIGGER_READY);
+        gate.setPosition(GATE_READY);
     }
 
     public void setAutoDriveMotorMode() {
@@ -255,6 +251,8 @@ public class robotHardware {
         startShooterAtRPM(rpm + 100);
         if(motorshoot.getVelocity() > rpm){
             motorintake.setPower(-1.0);
+            gate.setPosition(GATE_SHOOT);
+
             telemetry.addData("shooter velocity", motorshoot.getVelocity());
             telemetry.addData("shooter tpr", motorshoot.getMotorType().getTicksPerRev());
             telemetry.addData("projected rpm", rpm);
@@ -343,13 +341,13 @@ public class robotHardware {
 
     public void turnOnIntakeSubsystem() {
         motorintake.setPower(-1.0);
-        servoL.setPower(-1.0);
-        servoR.setPower(1.0);
+        //servoL.setPower(-1.0);
+        //servoR.setPower(1.0);
     }
     public void turnOffIntakeSubsystem() {
         motorintake.setPower(0);
-        servoL.setPower(0);
-        servoR.setPower(0);
+        //servoL.setPower(0);
+        //servoR.setPower(0);
     }
 
     public void launch(int numShots) {
