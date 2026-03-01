@@ -106,14 +106,22 @@ public class Opmode2 extends LinearOpMode {
             }
 
             if (gamepad1.right_bumper){
+                /* TODO: Not sure why these servos are still here with the "latest" code?
                 robot.servoL.setPower(-1);
                 robot.servoR.setPower(1);
+
+                 */
             } else if (gamepad1.right_trigger > 0.5){
+                /*
                 robot.servoL.setPower(1);
                 robot.servoR.setPower(-1);
+
+                 */
             } else {
+                /*
                 robot.servoL.setPower(0);
                 robot.servoR.setPower(0);
+                 */
             }
 
             //shooting

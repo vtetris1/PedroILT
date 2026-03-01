@@ -205,19 +205,20 @@ public class Opmode4 extends LinearOpMode {
             if (gamepad2.dpad_up) {
                 if (triggerTimer.seconds() >= TRIGGER_SHOOT_TIME) {
                     triggerTimer.reset();
-                    robot.trigger.setPosition(TRIGGER_SHOOT);
+                    // TODO: trigger to be replaced by gate?
+                    // robot.trigger.setPosition(TRIGGER_SHOOT);
                     bTriggerEnabled = true;
                 }
             }
 
             else if(gamepad2.dpad_down) {
-                robot.trigger.setPosition(TRIGGER_READY);
+                // robot.trigger.setPosition(TRIGGER_READY);
                 bTriggerEnabled = false;
             }
 
             else {
                 if (bTriggerEnabled && triggerTimer.seconds() >= TRIGGER_SHOOT_TIME) {
-                    robot.trigger.setPosition(TRIGGER_READY);
+                    // robot.trigger.setPosition(TRIGGER_READY);
                     bTriggerEnabled = false;
                 }
             }
