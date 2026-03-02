@@ -74,8 +74,8 @@ public class robotHardware {
     static final double TICKS_PER_INCH = (TICKS_DRIVE_PER_REVOLUTION * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
 
-    static final double GATE_READY = 0.25; //0.7
-    static final double GATE_SHOOT = 0.6; //0.2
+    public static final double GATE_READY = 0.25; //0.7
+    public static final double GATE_SHOOT = 0.6; //0.2
     boolean bShootRequested = false;
     int countShots = 0;
 
@@ -90,7 +90,7 @@ public class robotHardware {
         LAUNCHING,  // trigger SHOOT state
         LAUNCHED,   // trigger back to READY
     }
-    // 🔹 UPDATED STATE MACHINE
+
     private LAUNCH_STATES launchState;
 
     public double ticksPerInch = 31.3;
@@ -138,9 +138,9 @@ public class robotHardware {
         motorshoot.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         motorshoot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        double kp = 305.38;
-        double ki = 0.15;
-        double kd = 0.01;
+        double kp = 94.92;
+        double ki = 0.18;
+        double kd = 4.29;
         double kf = 11.5;
 
         motorshoot.setPIDFCoefficients(
@@ -249,17 +249,13 @@ public class robotHardware {
 
     public void autoShoot(double rpm){
         startShooterAtRPM(rpm + 100);
-        if(motorshoot.getVelocity() > rpm){
-            motorintake.setPower(-1.0);
+        if(motorshoot.getVelocity() > ((rpm/2) - 100)){
+            motorintake.setPower(1.0);
             gate.setPosition(GATE_SHOOT);
-
-            telemetry.addData("shooter velocity", motorshoot.getVelocity());
-            telemetry.addData("shooter tpr", motorshoot.getMotorType().getTicksPerRev());
-            telemetry.addData("projected rpm", rpm);
-            telemetry.update();
             // sleep(400);
         }
         motorintake.setPower(0.0);
+
     }
     public void setShooterTargetRpm(double target_rpm) {
         shooter_target_rpm = target_rpm;

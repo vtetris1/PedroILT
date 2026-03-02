@@ -11,7 +11,8 @@ public class BLUE_Near_3_Leave_Base extends AutoHardware2 {
     // Motor encoder parameter
     double ticksPerInch = 31.3;
     double ticksPerDegree = 15.6;
-    private final double SHOOTER_RPM_SHORT = 3150.0;
+    private final double SHOOTER_RPM_SHORT = 2600.0; //3000 // 28x2786/60 //28
+    private final double SHOOTER_RPM_LONG = 3050;
     private int target = 200; // Rotations Per Minute
 
     public BLUE_Near_3_Leave_Base() {

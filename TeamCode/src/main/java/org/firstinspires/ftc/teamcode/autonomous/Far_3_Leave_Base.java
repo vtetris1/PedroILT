@@ -11,8 +11,8 @@ public class Far_3_Leave_Base extends AutoHardware2 {
     // Motor encoder parameter
     double ticksPerInch = 31.3;
     double ticksPerDegree = 15.6;
-    double shooter_rpm_far = 3750;  // Rotations Per Minute
-
+    private final double SHOOTER_RPM_SHORT = 2600.0; //3000 // 28x2786/60 //28
+    private final double SHOOTER_RPM_LONG = 3050;
     public Far_3_Leave_Base() {
     }
 
@@ -23,7 +23,7 @@ public class Far_3_Leave_Base extends AutoHardware2 {
         //reset encoder
         setAutoDriveMotorMode();
         // Set target rpm based on the specific robot position: far, near
-        setShooterTargetRpm(shooter_rpm_far, shooter_rpm_far);
+        setShooterTargetRpm(SHOOTER_RPM_LONG, SHOOTER_RPM_LONG);
         waitForStart();
         triggerShoot(3);
 

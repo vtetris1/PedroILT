@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
 
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_READY;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_SHOOT;
 import static java.lang.Thread.sleep;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -35,9 +37,7 @@ public class AutoHardware2 extends LinearOpMode {
     public DcMotor motorbl = null;
     public DcMotor motorintake = null;
     public DcMotorEx motorturret = null;
-    public CRServo servoL = null;
-    public CRServo servoR = null;
-    public Servo trigger = null;
+    public Servo gate = null;
     //public CRServo pushServo = null;
     public DcMotor elevator = null;
     //public Limelight3A limelight;
@@ -78,8 +78,6 @@ public class AutoHardware2 extends LinearOpMode {
     static final double TICKS_PER_INCH = (TICKS_DRIVE_PER_REVOLUTION * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
 
-    static final double TRIGGER_READY = 0.7;
-    static final double TRIGGER_SHOOT = 0.2;
     boolean bShootRequested = false;
     int countShots = 0;
 
@@ -127,9 +125,7 @@ public class AutoHardware2 extends LinearOpMode {
         motorshoot = hwMap.get(DcMotorEx.class, "shoot");
         elevator = hwMap.get(DcMotorEx.class, "elevator");
 
-        servoL = hwMap.get(CRServo.class, "servoL");
-        servoR = hwMap.get(CRServo.class, "servoR");
-        trigger = hwMap.get(Servo.class, "trigger");
+        gate = hwMap.get(Servo.class, "gate");
         //pushServo = hwMap.get(CRServo.class, "pushServo");
         //limelight = hwMap.get(Limelight3A.class, "limelight");
 
@@ -140,8 +136,8 @@ public class AutoHardware2 extends LinearOpMode {
         motorbr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorbl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorfl.setDirection(DcMotor.Direction.REVERSE);
+        motorfr.setDirection(DcMotor.Direction.REVERSE);
         motorbl.setDirection(DcMotor.Direction.REVERSE);
-        motorintake.setDirection(DcMotor.Direction.REVERSE);
 
         setDrivetrainMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         motorshoot.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -173,7 +169,7 @@ public class AutoHardware2 extends LinearOpMode {
         angularVelocity0 = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
         yaw0 = orientation0.getYaw(AngleUnit.DEGREES);
 
-        trigger.setPosition(TRIGGER_READY);
+        gate.setPosition(GATE_READY);
         shootTimer.reset();
     }
 
@@ -355,19 +351,16 @@ public class AutoHardware2 extends LinearOpMode {
     public void turnOnIntake1stStage() {
         motorintake.setPower(-1.0);
     }
-    public void turnOnIntake2ndStage() {
-        servoL.setPower(-1.0);
-        servoR.setPower(1.0);
-    }
+
     public void turnOnIntakeSubsystem() {
         motorintake.setPower(-1.0);
-        servoL.setPower(-1.0);
-        servoR.setPower(1.0);
+        //servoL.setPower(-1.0);
+        //servoR.setPower(1.0);
     }
     public void turnOffIntakeSubsystem() {
         motorintake.setPower(0);
-        servoL.setPower(0);
-        servoR.setPower(0);
+        //servoL.setPower(0);
+        //servoR.setPower(0);
     }
 
     public void launch(int numShots) {
@@ -386,7 +379,7 @@ public class AutoHardware2 extends LinearOpMode {
                 }
                 break;
             case LAUNCH:
-                turnOnIntake2ndStage();
+                turnOnIntake1stStage();
                 secondStageTimer.reset();
                 launchState = LAUNCH_STATES.LAUNCHING_2ND_STAGE;
                 break;
@@ -404,10 +397,10 @@ public class AutoHardware2 extends LinearOpMode {
                 double shootTimeSeconds = shootTimer.seconds();
                 if (shootTimeSeconds > SHOOT_TIME_TOTAL) {
                     launchState = LAUNCH_STATES.LAUNCHED;
-                    trigger.setPosition(TRIGGER_READY);
+                    gate.setPosition(GATE_SHOOT); //fix redundant
                 } else if (shootTimeSeconds > SHOOT_TIME_2_ARTIFACTS) {
                     // Initiate trigger so that the last artifact can be fed into the shooter
-                    trigger.setPosition(TRIGGER_SHOOT);
+                    gate.setPosition(GATE_SHOOT);
                     target_ticks = shooter_target_ticks_last_artifact;
                 }
                 break;

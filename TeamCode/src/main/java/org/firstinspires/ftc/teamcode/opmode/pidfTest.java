@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmode;
 
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_SHOOT;
+
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
@@ -51,9 +53,9 @@ public class pidfTest extends LinearOpMode {
         robot.init(hardwareMap);
         start();
         double rpm = 1400;
-        double kp = 305.38;
-        double ki = 0.15;
-        double kd = 0.01;
+        double kp = 94.92;
+        double ki = 0.18;
+        double kd = 4.29;
         double kf = 11.5;
 
         int selectedState = 0;
@@ -68,6 +70,10 @@ public class pidfTest extends LinearOpMode {
 
 
         while (opModeIsActive()) {
+
+            robot.gate.setPosition(GATE_SHOOT);
+
+
             if(gamepad1.right_bumper){
                 robot.motorshoot.setVelocity(rpm);
                 telemetry.addData("kp", kp);
@@ -80,7 +86,7 @@ public class pidfTest extends LinearOpMode {
                 telemetry.update();
             }
             if(gamepad1.right_trigger > 0.5){
-                robot.motorshoot.setVelocity(rpm / 2);
+                robot.motorshoot.setVelocity(rpm -300);
             }
 
 
@@ -97,11 +103,6 @@ public class pidfTest extends LinearOpMode {
 
             else if (gamepad1.dpad_down) {
                 selectedState = 2;
-                sleep(500);
-            }
-
-            else if (gamepad1.dpad_right){
-                selectedState = 3;
                 sleep(500);
             }
 
@@ -151,12 +152,19 @@ public class pidfTest extends LinearOpMode {
             if (gamepad1.x) pidStep = 0.12;
             else if (gamepad1.a) pidStep = 1.0;
             else if (gamepad1.b) pidStep = 10.0;
-            else if (gamepad1.y) pidStep = 100.0;
+            else if (gamepad1.y) pidStep = 0.01;
 
             robot.motorshoot.setPIDFCoefficients(
                     DcMotor.RunMode.RUN_USING_ENCODER,
                     new PIDFCoefficients(kp, ki, kd, kf)
             );
+
+            if(gamepad1.left_stick_y > 0.5){
+                robot.motorintake.setPower(-1);
+            }
+            else{
+                robot.motorintake.setPower(0);
+            }
 
             idle();
             telemetry.addData("kp", kp);

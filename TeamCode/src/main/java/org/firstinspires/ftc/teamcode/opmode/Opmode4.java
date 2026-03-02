@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode.opmode;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_READY;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_SHOOT;
+
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
@@ -47,7 +51,7 @@ public class Opmode4 extends LinearOpMode {
 
     private static double elevator_target_height_inches = TARGET_HEIGHT_INCH;
     private static double elevator_target_height_ticks =
-            (elevator_target_height_inches / CIRCUMFERENCE_HTD5M_PULLEY_24T_IN_INCHES * TICKS_PER_REVOLUTION_30RPM);
+            (elevator_target_height_inches / CIRCUMFERENCE_HTD5M_PULLEY_24T_IN_INCHES * TICKS_PER_REVOLUTION_30RPM); //fix should be about 10,500
     // Constants for GoBilda 5203 6000 rpm motor
     static final double TICKS_PER_REVOLUTION = 28.0;
     static final double MAX_TICKS_PER_SEC = 2800.0;
@@ -55,9 +59,9 @@ public class Opmode4 extends LinearOpMode {
 
 
 
-    private final double SHOOTER_RPM_SHORT = 3000.0; // 28x2786/60 //28
-    private final double SHOOTER_RPM_LONG = 3880; //36?
-    private final double SHOOTER_RPM_CLEAR = -1000;
+    private final double SHOOTER_RPM_SHORT = 2600.0; //3000 // 28x2786/60 //28
+    private final double SHOOTER_RPM_LONG = 3050; //36?
+    private final double SHOOTER_RPM_CLEAR = -500;
     private final double SHOOTER_CHANGE = 200;
     private double rpm = SHOOTER_RPM_SHORT;
 
@@ -67,8 +71,6 @@ public class Opmode4 extends LinearOpMode {
     ElapsedTime controller1SpeedChangeTimer = new ElapsedTime();
 
     ElapsedTime triggerTimer = new ElapsedTime();
-    static final double TRIGGER_READY = 0.6;
-    static final double TRIGGER_SHOOT = 0.2;
     static final double TRIGGER_SHOOT_TIME = 0.5;
 
     static final double SPEED_CHANGE_TIME = 0.15; // seconds to handle physical button/key natural time
@@ -78,7 +80,12 @@ public class Opmode4 extends LinearOpMode {
     private boolean automatedDrive;
     private Supplier<PathChain> pathChain;
     private TelemetryManager telemetryM;
-    private boolean slowMode = false;
+
+    private final double turretPower = 0.9;
+    private boolean turretMode = false;
+    private double turretFactor = 1;
+
+
 
 
     private long nowMs() {
@@ -102,7 +109,7 @@ public class Opmode4 extends LinearOpMode {
             boolean x = gamepad2.x;
 
 //DRIVING
-            double x_dir = gamepad1.left_stick_x * controller1Speed;
+            double x_dir = -gamepad1.left_stick_x * controller1Speed;
             double y_dir = -gamepad1.left_stick_y * controller1Speed;
             double turn = gamepad1.right_stick_x * controller1Speed;
 
@@ -172,14 +179,11 @@ public class Opmode4 extends LinearOpMode {
             }
 
             if (y && !prevY){
-                robot.autoShoot(SHOOTER_RPM_SHORT - 100);
+                robot.autoShoot(SHOOTER_RPM_SHORT);
                 //find a solution for this
             }
             if (gamepad2.right_bumper){
                 robot.autoShoot(SHOOTER_RPM_LONG);
-            }
-            else if (gamepad2.right_trigger > 0.5){
-                robot.motorshoot.setVelocity(SHOOTER_RPM_CLEAR);
             }
 
             if(a && !prevA){
@@ -193,9 +197,9 @@ public class Opmode4 extends LinearOpMode {
 
             //turret
             if (gamepad2.dpad_left){
-                robot.motorturret.setPower(0.5);
+                robot.motorturret.setPower(turretPower * turretFactor);
             } else if (gamepad2.dpad_right){
-                robot.motorturret.setPower(-0.5);
+                robot.motorturret.setPower(-turretPower * turretFactor);
             } else {
                 robot.motorturret.setPower(0);
             }
@@ -205,20 +209,26 @@ public class Opmode4 extends LinearOpMode {
             if (gamepad2.dpad_up) {
                 if (triggerTimer.seconds() >= TRIGGER_SHOOT_TIME) {
                     triggerTimer.reset();
-                    // TODO: trigger to be replaced by gate?
-                    // robot.trigger.setPosition(TRIGGER_SHOOT);
+                    robot.gate.setPosition(GATE_SHOOT);
                     bTriggerEnabled = true;
                 }
             }
 
             else if(gamepad2.dpad_down) {
-                // robot.trigger.setPosition(TRIGGER_READY);
-                bTriggerEnabled = false;
+                turretMode = !turretMode;
+                if(turretMode){
+                    turretFactor = 0.33;
+                    sleep(500);
+                }
+                else{
+                    turretFactor = 1;
+                    sleep(500);
+                }
             }
 
             else {
-                if (bTriggerEnabled && triggerTimer.seconds() >= TRIGGER_SHOOT_TIME) {
-                    // robot.trigger.setPosition(TRIGGER_READY);
+                if ((bTriggerEnabled && triggerTimer.seconds() >= TRIGGER_SHOOT_TIME) && (robot.motorshoot.getVelocity() < 1000)){
+                    robot.gate.setPosition(GATE_READY);
                     bTriggerEnabled = false;
                 }
             }
@@ -230,10 +240,11 @@ public class Opmode4 extends LinearOpMode {
             runElevatorStateMachine();
             // --- TELEMETRY ---
             telemetry.addData("intakePower", robot.motorintake.getPower());
-            telemetry.addData("shooter velocity", robot.motorshoot.getVelocity());
+            telemetry.addData("shooter velocity", (robot.motorshoot.getVelocity() * 2 ));
             telemetry.addData("shooter tpr", robot.motorshoot.getMotorType().getTicksPerRev());
             telemetry.addData("projected rpm", rpm);
             telemetry.addData("controller1Speed", controller1Speed);
+            telemetry.addData("turret factor", turretFactor);
             telemetry.update();
             idle();
         }
