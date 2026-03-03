@@ -38,20 +38,34 @@ public class Opmode4 extends LinearOpMode {
 
     }
     private PARK_STATES parkState = PARK_STATES.INIT;
-    // Constants for GoBilda 5203 30 rpm motor
-    private static final double TICKS_PER_REVOLUTION_30RPM = 5281.1;        // constant given by GoBilda
-    private static final double CIRCUMFERENCE_HTD5M_PULLEY_24T_IN_INCHES = 5 * 24 / 25.4;
     private static final double TARGET_HEIGHT_INCH = 20;
     private static final double MAX_HEIGHT_INCH = 21;
+    // Constants for GoBilda 5203 30 rpm motor
+    // private static final double TICKS_PER_REVOLUTION_ELEVATOR_MOTOR = 5281.1;        // 30RPM motor constant PPR given by GoBilda
+
+    // The following ratio is added based on actual test with a target height.
+    // Actual rising height is 18 inches and raised height is 36 inch.
+    // However, the cleared space height is about 37 inch since both PODs extended downward for close to 1.0 inch.
+    // Target to rise up 1.0 inch more to reach 37.0 inch, 1.0 inch below the  maximum 38 inch.
+    // The extra 1.0 inch is needed so that a complete 18 inch height space is created after both PODs are extended down fully.
+    private static final double RATIO_60RPM = 1 + (1.0/TARGET_HEIGHT_INCH);
+// 60RPM motor constant PPR given by GoBilda and scaled by actual testing results.
+//    private static final double TICKS_PER_REVOLUTION_ELEVATOR_MOTOR = 2786.2 * RATIO_60RPM;
+
+    private static final double RATIO_84RPM = 1 + (1.0/TARGET_HEIGHT_INCH);
+    // 84RPM motor constant PPR given by GoBilda and scaled by actual testing results.
+    private static final double TICKS_PER_REVOLUTION_ELEVATOR_MOTOR = 1992.6 * RATIO_84RPM;
+    private static final double CIRCUMFERENCE_HTD5M_PULLEY_24T_IN_INCHES = 5 * 24 / 25.4;
     private static final double ELEVATOR_RISING_UP_POWER = 0.95;
     private static final double ELEVATOR_GOING_DOWN_POWER = 0.4;
     private static double ELEVATOR_GOING_DOWN_INCHES = -0.25;
     private static double ELEVATOR_GOING_DOWN_TICKS =
-            (ELEVATOR_GOING_DOWN_INCHES / CIRCUMFERENCE_HTD5M_PULLEY_24T_IN_INCHES * TICKS_PER_REVOLUTION_30RPM);
+            (ELEVATOR_GOING_DOWN_INCHES / CIRCUMFERENCE_HTD5M_PULLEY_24T_IN_INCHES * TICKS_PER_REVOLUTION_ELEVATOR_MOTOR);
 
     private static double elevator_target_height_inches = TARGET_HEIGHT_INCH;
     private static double elevator_target_height_ticks =
-            (elevator_target_height_inches / CIRCUMFERENCE_HTD5M_PULLEY_24T_IN_INCHES * TICKS_PER_REVOLUTION_30RPM); //fix should be about 10,500
+            (elevator_target_height_inches / CIRCUMFERENCE_HTD5M_PULLEY_24T_IN_INCHES * TICKS_PER_REVOLUTION_ELEVATOR_MOTOR); //fix should be about 10,500
+
     // Constants for GoBilda 5203 6000 rpm motor
     static final double TICKS_PER_REVOLUTION = 28.0;
     static final double MAX_TICKS_PER_SEC = 2800.0;
@@ -283,7 +297,7 @@ public class Opmode4 extends LinearOpMode {
             case RISED:
                 if (gamepad2.left_stick_y <= -0.5 || gamepad2.right_stick_y <= -0.5) {
                     elevator_target_height_inches = Math.min(elevator_target_height_inches + 1, TARGET_HEIGHT_INCH);
-                    elevator_target_height_ticks = (elevator_target_height_inches / CIRCUMFERENCE_HTD5M_PULLEY_24T_IN_INCHES * TICKS_PER_REVOLUTION_30RPM);
+                    elevator_target_height_ticks = (elevator_target_height_inches / CIRCUMFERENCE_HTD5M_PULLEY_24T_IN_INCHES * TICKS_PER_REVOLUTION_ELEVATOR_MOTOR);
                     if (elevator_target_height_inches < TARGET_HEIGHT_INCH) {
                         robot.elevator.setTargetPosition((int) (elevator_target_height_ticks));
                         robot.elevator.setMode(DcMotor.RunMode.RUN_TO_POSITION);
