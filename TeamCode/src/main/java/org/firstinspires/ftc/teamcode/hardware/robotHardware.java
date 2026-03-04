@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 
 import static java.lang.Thread.sleep;
 
 import com.bylazar.field.Line;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -160,6 +162,10 @@ public class robotHardware {
         imu = hwMap.get(IMU.class, "imu");
         imu.initialize(new IMU.Parameters(orientationOnRobot));
         imu.resetYaw();
+
+        Limelight3A limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.setPollRateHz(100);
+        limelight.start();
 
         orientation0 = imu.getRobotYawPitchRollAngles();
         angularVelocity0 = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
