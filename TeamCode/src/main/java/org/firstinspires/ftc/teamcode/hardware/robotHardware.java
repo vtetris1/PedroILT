@@ -43,7 +43,7 @@ public class robotHardware {
     public Servo gate = null;
     //public CRServo pushServo = null;
     public DcMotor elevator = null;
-    //public Limelight3A limelight;
+    public Limelight3A limelight;
 
     // Use DcMotorEx for shooter so we can control velocity (ticks/sec)
     public DcMotorEx motorshoot = null;
@@ -120,6 +120,7 @@ public class robotHardware {
         elevator = hwMap.get(DcMotorEx.class, "elevator");
 
         gate = hwMap.get(Servo.class, "gate");
+        limelight = hwMap.get(Limelight3A.class, "limelight");
         //pushServo = hwMap.get(CRServo.class, "pushServo");
         //limelight = hwMap.get(Limelight3A.class, "limelight");
 
@@ -163,7 +164,7 @@ public class robotHardware {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
         imu.resetYaw();
 
-        Limelight3A limelight = hardwareMap.get(Limelight3A.class, "limelight");
+
         limelight.setPollRateHz(100);
         limelight.start();
 

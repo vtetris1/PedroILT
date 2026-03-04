@@ -155,9 +155,10 @@ public class Opmode8 extends LinearOpMode {
 
                 if (result != null && result.isValid()) {
                     Pose3D pose = result.getBotpose();
+                    //limelight.
 
                     telemetry.addData("x", "%.2f m", pose.getPosition().x);
-                    telemetry.addData("y", "%.2f m", pose.getPosition().y);
+                    telemetry.addData("y",      "%.2f m", pose.getPosition().y);
                     telemetry.addData("heading", "%.2f deg", pose.getOrientation().getYaw());
                 } else {
                     telemetry.addData("e:", "Tag 24 Not Found");
