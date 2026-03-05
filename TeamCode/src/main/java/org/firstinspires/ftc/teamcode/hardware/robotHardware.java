@@ -12,6 +12,7 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -50,6 +51,10 @@ public class robotHardware {
 
     // Use DcMotorEx for shooter so we can control velocity (ticks/sec)
     public DcMotorEx motorshoot = null;
+
+    public DistanceSensor distanceF = null;
+    public DistanceSensor distanceR = null;
+    public DistanceSensor distanceL = null;
 
 
     // Initial robot orientation
@@ -126,9 +131,12 @@ public class robotHardware {
         elevator = hwMap.get(DcMotorEx.class, "elevator");
 
         gate = hwMap.get(Servo.class, "gate");
+        limelight = hwMap.get(Limelight3A.class, "limelight");
         //pushServo = hwMap.get(CRServo.class, "pushServo");
         //limelight = hwMap.get(Limelight3A.class, "limelight");
-
+        distanceF = hwMap.get(DistanceSensor.class, "distanceF");
+        distanceR = hwMap.get(DistanceSensor.class, "distanceR");
+        distanceL = hwMap.get(DistanceSensor.class, "distanceL");
 
         //front right motor no encoder
 
@@ -442,4 +450,3 @@ public class robotHardware {
         return bShootRequested;
     }
 }
-

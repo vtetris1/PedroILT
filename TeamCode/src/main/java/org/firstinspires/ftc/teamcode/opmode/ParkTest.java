@@ -15,17 +15,16 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.teamcode.hardware.MedianFilter5;
 import org.firstinspires.ftc.teamcode.hardware.robotHardware;
 
 import java.util.function.Supplier;
 
 @Configurable
-@TeleOp(name = "Opmode8")
-public class Opmode8 extends LinearOpMode {
+@TeleOp(name = "ParkTest")
+public class ParkTest extends LinearOpMode {
     robotHardware robot = new robotHardware();
 
     private boolean prevA = false;
@@ -33,7 +32,7 @@ public class Opmode8 extends LinearOpMode {
     private boolean prevY = false;
     private boolean prevX = false;
 
-    public enum PARK_STATES {
+    public enum ELEVATOR_STATES {
         INIT,
         RISING_UP,
         RISED,
@@ -41,7 +40,7 @@ public class Opmode8 extends LinearOpMode {
         GOING_DOWN,
 
     }
-    private PARK_STATES parkState = PARK_STATES.INIT;
+    private ELEVATOR_STATES elevatorState = ELEVATOR_STATES.INIT;
     private static final double TARGET_HEIGHT_INCH = 20;
     private static final double MAX_HEIGHT_INCH = 21;
     // Constants for GoBilda 5203 30 rpm motor
@@ -102,39 +101,48 @@ public class Opmode8 extends LinearOpMode {
     private final double turretPower = 0.9;
     private boolean turretMode = false;
     private double turretFactor = 1;
-
-
-
-
     private long nowMs() {
         return System.currentTimeMillis();
     }
 
 
     Limelight3A limelight;
-    public void localizationUpdate(){
 
-        robot.limelight.update();
-        LLResult result = limelight.getLatestResult();
-        robot.pinpoint.update();
+    /* ---------------- Targets ---------------- */
+    static final double TARGET_HEADING = 180.0;
+    static final double FRONT_MIN = 24.5;
+    static final double FRONT_MAX = 25.0;
+    static final double FRONT_MID = (FRONT_MIN + FRONT_MAX) / 2.0;
+    static final double RIGHT_MIN = 30.0;
+    static final double RIGHT_MAX = 31.0;
+    static final double RIGHT_MID = (RIGHT_MIN + RIGHT_MAX) / 2.0;
 
-        if (result != null && result.isValid()) {
-            Pose3D botpose = result.getBotpose();
+    /* ---------------- Controller Gains ---------------- */
+    double kP_distance = 0.05;
+    double kP_heading  = 0.015;
+    double MAX_POWER = 0.30;
 
-            double fieldX = botpose.getPosition().x * 1000;
-            double fieldY = botpose.getPosition().y * 1000;
-            double fieldHeading = botpose.getOrientation().getYaw();
+    /* ---------------- State Machine ---------------- */
 
-            pinpoint.setPosition(new Pose2D(DistanceUnit.MM, fieldX, fieldY, AngleUnit.DEGREES, fieldHeading));
-        }
-
+    enum PARK_STATES {
+        INIT,
+        APPROACHING,
+        COMPLETE
     }
 
+    PARK_STATES parkState = PARK_STATES.INIT;
+    MedianFilter5 medianFilterF = new MedianFilter5();
+    MedianFilter5 medianFilterR = new MedianFilter5();
+    MedianFilter5 medianFilterL = new MedianFilter5();
+
+    double filteredF = 30;
+    double filteredR = 30;
+    double filteredL = 30;
 
     @Override
     public void runOpMode() {
-
         robot.init(hardwareMap);
+
         waitForStart();
 
         controller1SpeedChangeTimer.reset();
@@ -261,9 +269,8 @@ public class Opmode8 extends LinearOpMode {
                 }
             }
 
-
-
-
+            //precisionParkStateMachine
+            runPrecisionParkStateMachine();
             //elevator
             runElevatorStateMachine();
             // --- TELEMETRY ---
@@ -273,6 +280,11 @@ public class Opmode8 extends LinearOpMode {
             telemetry.addData("projected rpm", rpm);
             telemetry.addData("controller1Speed", controller1Speed);
             telemetry.addData("turret factor", turretFactor);
+            telemetry.addData("heading", String.format("%.01f degree", robot.getCurrentYaw()));
+            telemetry.addData("distanceF", String.format("%.01f in", filteredF));
+            telemetry.addData("distanceR", String.format("%.01f in", filteredR));
+            telemetry.addData("distanceL", String.format("%.01f in", filteredL));
+
             telemetry.update();
             idle();
         }
@@ -281,7 +293,7 @@ public class Opmode8 extends LinearOpMode {
     }
 
     void runElevatorStateMachine() {
-        switch (parkState) {
+        switch (elevatorState) {
             case INIT:
                 if (gamepad2.left_stick_y <= -0.5 && gamepad2.right_stick_y <= -0.5) {
                     //robot.elevator.(); negative ticks
@@ -294,18 +306,18 @@ public class Opmode8 extends LinearOpMode {
                     robot.elevator.setTargetPosition((int)(elevator_target_height_ticks));
                     robot.elevator.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     robot.elevator.setPower(ELEVATOR_RISING_UP_POWER);
-                    parkState = PARK_STATES.RISING_UP;
+                    elevatorState = ELEVATOR_STATES.RISING_UP;
                 }
                 else if (gamepad2.left_stick_y >= 0.5 && gamepad2.right_stick_y >= 0.5) {
                     // both joysticks are flipped downward: reset encode, going down slowly 0.5 inch per command, and reset
                     goDownSlowly();
-                    parkState = PARK_STATES.GOING_DOWN;
+                    elevatorState = ELEVATOR_STATES.GOING_DOWN;
                 }
                 break;
             case RISING_UP:
                 if (!robot.elevator.isBusy()) {
                     robot.elevator.setPower(0);
-                    parkState = PARK_STATES.RISED;
+                    elevatorState = ELEVATOR_STATES.RISED;
                 }
                 break;
             case RISED:
@@ -316,13 +328,13 @@ public class Opmode8 extends LinearOpMode {
                         robot.elevator.setTargetPosition((int) (elevator_target_height_ticks));
                         robot.elevator.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                         robot.elevator.setPower(ELEVATOR_RISING_UP_POWER);
-                        parkState = PARK_STATES.RISING_UP;
+                        elevatorState = ELEVATOR_STATES.RISING_UP;
                     }
                 }
                 else if (gamepad2.left_stick_y >= 0.5 && gamepad2.right_stick_y >= 0.5) {
                     // both joysticks are flipped downward: reset encode, going down slowly 0.5 inch per command, and reset
                     goDownSlowly();
-                    parkState = PARK_STATES.GOING_DOWN;
+                    elevatorState = ELEVATOR_STATES.GOING_DOWN;
                 }
                 break;
             case GOING_DOWN:
@@ -331,11 +343,11 @@ public class Opmode8 extends LinearOpMode {
                     robot.elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                     robot.elevator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                     robot.elevator.setPower(0);
-                    parkState = PARK_STATES.INIT;
+                    elevatorState = ELEVATOR_STATES.INIT;
                 }
                 break;
         }
-        telemetry.addData("parkState", parkState);
+        telemetry.addData("elevatorState", elevatorState);
         telemetry.addData("elevatorInches", elevator_target_height_inches);
         telemetry.addData("elevatorTicks", elevator_target_height_ticks);
         telemetry.addData("elevatorPos", robot.elevator.getCurrentPosition());
@@ -350,5 +362,109 @@ public class Opmode8 extends LinearOpMode {
         robot.elevator.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
+    void runPrecisionParkStateMachine() {
+        updateDistances();
+        switch (parkState) {
+            case INIT:
+                if (gamepad1.a) {
+                    parkState = PARK_STATES.APPROACHING;
+                }
+                break;
+            case APPROACHING:
+                double xPower = -computeRightCorrection();
+                double yPower = -computeFrontCorrection();
+                double turnPower   = computeHeadingCorrection();
+                telemetry.addData("powers: ",
+                        String.format("x: %.02f; y: %.02f; t: %.02f",
+                                xPower, yPower, turnPower));
+                driveRobotByPower(xPower, yPower, turnPower);
+
+                if (withinTarget()) {
+                    parkState = PARK_STATES.COMPLETE;
+                }
+                break;
+            case COMPLETE:
+                driveRobotByPower(0,0,0);
+                break;
+        }
+        telemetry.addData("parkState", parkState);
+    }
+    /* ---------------- SENSOR UPDATE ---------------- */
+
+    private void updateDistances() {
+        double raw = robot.distanceF.getDistance(DistanceUnit.INCH);
+        if (raw > 1 && raw < 60) {
+            filteredF = medianFilterF.update(raw);
+        }
+
+        raw = robot.distanceR.getDistance(DistanceUnit.INCH);
+        if (raw > 1 && raw < 60) {
+            filteredR = medianFilterR.update(raw);
+        }
+
+        raw = robot.distanceL.getDistance(DistanceUnit.INCH);
+        if (raw > 1 && raw < 60) {
+            filteredL = medianFilterL.update(raw);
+        }
+    }
+
+    /* ---------------- CONTROLLERS ---------------- */
+
+    private double computeFrontCorrection() {
+        if (filteredF >= FRONT_MIN &&
+                filteredF <= FRONT_MAX)
+            return 0;
+        double error = FRONT_MID - filteredF;
+        return clip(error * kP_distance);
+    }
+
+    private double computeRightCorrection() {
+        if (filteredR >= RIGHT_MIN &&
+                filteredR <= RIGHT_MAX)
+            return 0;
+        double error = RIGHT_MID - filteredR;
+        return clip(error * kP_distance);
+    }
+
+    private double computeHeadingCorrection() {
+        double heading = robot.getCurrentYaw();
+        double error = normalizeAngle(TARGET_HEADING - heading);
+        return clip(error * kP_heading);
+    }
+
+    /* ---------------- DRIVE ---------------- */
+    private void driveRobotByPower(double x, double y, double turn) {
+        double flp = y + x + turn;
+        double frp = y - x - turn;
+        double blp = y - x + turn;
+        double brp = y + x - turn;
+
+        robot.motorfl.setPower(flp);
+        robot.motorfr.setPower(frp);
+        robot.motorbl.setPower(blp);
+        robot.motorbr.setPower(brp);
+    }
+    /* ---------------- HELPERS ---------------- */
+
+    private boolean withinTarget() {
+
+        return filteredF >= FRONT_MIN &&
+                filteredF <= FRONT_MAX &&
+                filteredR >= RIGHT_MIN &&
+                filteredR <= RIGHT_MAX;
+    }
+
+    private double clip(double v) {
+        return Math.max(-MAX_POWER,
+                Math.min(MAX_POWER, v));
+    }
+
+    private double normalizeAngle(double angle) {
+
+        while(angle > 180) angle -= 360;
+        while(angle < -180) angle += 360;
+
+        return angle;
+    }
 }
 
