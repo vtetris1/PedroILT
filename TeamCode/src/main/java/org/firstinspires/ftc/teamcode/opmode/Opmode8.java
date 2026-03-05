@@ -125,7 +125,7 @@ public class Opmode8 extends LinearOpMode {
             double fieldY = botpose.getPosition().y * 1000;
             double fieldHeading = botpose.getOrientation().getYaw();
 
-            pinpoint.setPosition(new Pose2D(DistanceUnit.MM, fieldX, fieldY, AngleUnit.DEGREES, fieldHeading));
+            robot.pinpoint.setPosition(new Pose2D(DistanceUnit.MM, fieldX, fieldY, AngleUnit.DEGREES, fieldHeading));
         }
 
     }

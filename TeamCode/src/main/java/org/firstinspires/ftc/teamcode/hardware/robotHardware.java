@@ -47,7 +47,7 @@ public class robotHardware {
     public DcMotor elevator = null;
 
     public GoBildaPinpointDriver pinpoint = null;
-    //public Limelight3A limelight;
+    public Limelight3A limelight;
 
     // Use DcMotorEx for shooter so we can control velocity (ticks/sec)
     public DcMotorEx motorshoot = null;
@@ -124,7 +124,7 @@ public class robotHardware {
         motorintake = hwMap.get(DcMotor.class, "intake");
 
 
-        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "odom");
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
 
         // get shooter as DcMotorEx to expose velocity control
         motorshoot = hwMap.get(DcMotorEx.class, "shoot");
@@ -133,7 +133,6 @@ public class robotHardware {
         gate = hwMap.get(Servo.class, "gate");
         limelight = hwMap.get(Limelight3A.class, "limelight");
         //pushServo = hwMap.get(CRServo.class, "pushServo");
-        //limelight = hwMap.get(Limelight3A.class, "limelight");
         distanceF = hwMap.get(DistanceSensor.class, "distanceF");
         distanceR = hwMap.get(DistanceSensor.class, "distanceR");
         distanceL = hwMap.get(DistanceSensor.class, "distanceL");
