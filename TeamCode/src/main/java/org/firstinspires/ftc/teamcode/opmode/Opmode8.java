@@ -15,6 +15,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.hardware.robotHardware;
 
@@ -109,6 +112,23 @@ public class Opmode8 extends LinearOpMode {
 
 
     Limelight3A limelight;
+    public void localizationUpdate(){
+
+        robot.limelight.update();
+        LLResult result = limelight.getLatestResult();
+        robot.pinpoint.update();
+
+        if (result != null && result.isValid()) {
+            Pose3D botpose = result.getBotpose();
+
+            double fieldX = botpose.getPosition().x * 1000;
+            double fieldY = botpose.getPosition().y * 1000;
+            double fieldHeading = botpose.getOrientation().getYaw();
+
+            pinpoint.setPosition(new Pose2D(DistanceUnit.MM, fieldX, fieldY, AngleUnit.DEGREES, fieldHeading));
+        }
+
+    }
 
 
     @Override

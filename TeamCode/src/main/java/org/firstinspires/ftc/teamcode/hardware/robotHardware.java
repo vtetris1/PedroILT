@@ -7,6 +7,7 @@ import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.tel
 import static java.lang.Thread.sleep;
 
 import com.bylazar.field.Line;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -43,6 +44,8 @@ public class robotHardware {
     public Servo gate = null;
     //public CRServo pushServo = null;
     public DcMotor elevator = null;
+
+    public GoBildaPinpointDriver pinpoint = null;
     //public Limelight3A limelight;
 
     // Use DcMotorEx for shooter so we can control velocity (ticks/sec)
@@ -115,6 +118,9 @@ public class robotHardware {
         motorturret = hwMap.get(DcMotorEx.class, "turret");
         motorintake = hwMap.get(DcMotor.class, "intake");
 
+
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "odom");
+
         // get shooter as DcMotorEx to expose velocity control
         motorshoot = hwMap.get(DcMotorEx.class, "shoot");
         elevator = hwMap.get(DcMotorEx.class, "elevator");
@@ -125,6 +131,7 @@ public class robotHardware {
 
 
         //front right motor no encoder
+
 
         motorfr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorfl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -163,15 +170,16 @@ public class robotHardware {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
         imu.resetYaw();
 
-        Limelight3A limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.setPollRateHz(100);
-        limelight.start();
+//        Limelight3A limelight = hardwareMap.get(Limelight3A.class, "limelight");
+//        limelight.setPollRateHz(100);
+//        limelight.start();
 
         orientation0 = imu.getRobotYawPitchRollAngles();
         angularVelocity0 = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
         yaw0 = orientation0.getYaw(AngleUnit.DEGREES);
         shootTimer.reset();
-        gate.setPosition(GATE_READY);
+//        gate.setPosition(GATE_READY);
+        gate.setPosition(GATE_SHOOT);
     }
 
     public void setAutoDriveMotorMode() {
@@ -257,7 +265,6 @@ public class robotHardware {
         startShooterAtRPM(rpm + 100);
         if(motorshoot.getVelocity() > ((rpm/2) - 100)){
             motorintake.setPower(1.0);
-            gate.setPosition(GATE_SHOOT);
             // sleep(400);
         }
         motorintake.setPower(0.0);
