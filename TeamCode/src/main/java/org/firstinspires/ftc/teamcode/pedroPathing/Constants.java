@@ -21,8 +21,8 @@ public class Constants {
             .useSecondaryHeadingPIDF(true)
             .useSecondaryDrivePIDF(true)
             // SP: new weight 14.35 kg.
-            // TODO: remeasure after replacing with 14 GA (1.9 mm thick) metal one-piece foot.
-            .mass(14.35)
+            // DONE: previous weight 14.35 kg, new weight 16.60 kg
+            .mass(16.60)
             .forwardZeroPowerAcceleration(-26.8781)
             .lateralZeroPowerAcceleration(-55.5780);
 
