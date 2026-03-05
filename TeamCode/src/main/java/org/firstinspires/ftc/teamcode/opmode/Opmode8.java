@@ -114,8 +114,8 @@ public class Opmode8 extends LinearOpMode {
     Limelight3A limelight;
     public void localizationUpdate(){
 
-        robot.limelight.update();
         LLResult result = limelight.getLatestResult();
+        limelight.updateRobotOrientation(robot.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
         robot.pinpoint.update();
 
         if (result != null && result.isValid()) {
