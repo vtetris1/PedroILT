@@ -1,2 +1,13 @@
 include ':FtcRobotController'
 include ':TeamCode'
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        google()
+        mavenCentral()
+        // ADD THIS LINE BELOW
+        maven { url 'https://jitpack.io' }
+        maven { url 'https://mymaven.bylazar.com/releases' }
+    }
+}

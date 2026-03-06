@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmode;
 
-import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_SHOOT;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_OPEN;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.TelemetryManager;
@@ -71,7 +71,7 @@ public class pidfTest extends LinearOpMode {
 
         while (opModeIsActive()) {
 
-            robot.gate.setPosition(GATE_SHOOT);
+            robot.gate.setPosition(GATE_OPEN);
 
 
             if(gamepad1.right_bumper){

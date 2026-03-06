@@ -1,8 +1,8 @@
 package org.firstinspires.ftc.teamcode.opmode;
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
-import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_READY;
-import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_SHOOT;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_CLOSE;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_OPEN;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.TelemetryManager;
@@ -223,7 +223,7 @@ public class Opmode4 extends LinearOpMode {
             if (gamepad2.dpad_up) {
                 if (triggerTimer.seconds() >= TRIGGER_SHOOT_TIME) {
                     triggerTimer.reset();
-                    robot.gate.setPosition(GATE_SHOOT);
+                    robot.gate.setPosition(GATE_OPEN);
                     bTriggerEnabled = true;
                 }
             }
@@ -242,7 +242,7 @@ public class Opmode4 extends LinearOpMode {
 
             else {
                 if ((bTriggerEnabled && triggerTimer.seconds() >= TRIGGER_SHOOT_TIME) && (robot.motorshoot.getVelocity() < 1000)){
-                    robot.gate.setPosition(GATE_READY);
+                    robot.gate.setPosition(GATE_CLOSE);
                     bTriggerEnabled = false;
                 }
             }

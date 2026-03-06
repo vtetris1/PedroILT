@@ -1,8 +1,8 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
 
-import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_READY;
-import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_SHOOT;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_CLOSE;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_OPEN;
 import static java.lang.Thread.sleep;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -169,7 +169,7 @@ public class AutoHardware2 extends LinearOpMode {
         angularVelocity0 = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
         yaw0 = orientation0.getYaw(AngleUnit.DEGREES);
 
-        gate.setPosition(GATE_READY);
+        gate.setPosition(GATE_CLOSE);
         shootTimer.reset();
     }
 
@@ -397,10 +397,10 @@ public class AutoHardware2 extends LinearOpMode {
                 double shootTimeSeconds = shootTimer.seconds();
                 if (shootTimeSeconds > SHOOT_TIME_TOTAL) {
                     launchState = LAUNCH_STATES.LAUNCHED;
-                    gate.setPosition(GATE_SHOOT); //fix redundant
+                    gate.setPosition(GATE_OPEN); //fix redundant
                 } else if (shootTimeSeconds > SHOOT_TIME_2_ARTIFACTS) {
                     // Initiate trigger so that the last artifact can be fed into the shooter
-                    gate.setPosition(GATE_SHOOT);
+                    gate.setPosition(GATE_OPEN);
                     target_ticks = shooter_target_ticks_last_artifact;
                 }
                 break;

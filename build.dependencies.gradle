@@ -1,8 +1,10 @@
+/*
 repositories {
     mavenCentral()
     google() // Needed for androidx
     maven { url = "https://mymaven.bylazar.com/releases" }
 }
+ */
 
 dependencies {
     implementation 'org.firstinspires.ftc:Inspection:11.0.0'

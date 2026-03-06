@@ -42,7 +42,11 @@ public class robotHardware {
     public DcMotor motorbl = null;
     public DcMotor motorintake = null;
     public DcMotorEx motorturret = null;
+    // The gate servo is to block artifacts before shoot motor is reaching a target rpm.
     public Servo gate = null;
+    public Servo flapper2 = null;
+    // The flapper servo is to push the flapper inward so that artifacts can touch 3rd stage intake for shooting artifacts.
+    public Servo flapper3 = null;
     //public CRServo pushServo = null;
     public DcMotor elevator = null;
 
@@ -84,8 +88,15 @@ public class robotHardware {
     static final double TICKS_PER_INCH = (TICKS_DRIVE_PER_REVOLUTION * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
 
-    public static final double GATE_READY = 0.25; //0.7
-    public static final double GATE_SHOOT = 0.6; //0.2
+    public static final double GATE_CLOSE = 0.2; //0.7
+    public static final double GATE_OPEN = 0.5; //0.2
+    // Flapper for 2nd stage intake
+    public static final double FLAPPER_2_OPEN = 0.1;
+    public static final double FLAPPER_2_CLOSE = 0.9;
+    // Flapper is open to hold an artifact without touching the 3rd stage intake.
+    public static final double FLAPPER_3_OPEN = 0.514;
+    public static final double FLAPPER_3_CLOSE = 0.499;
+
     boolean bShootRequested = false;
     int countShots = 0;
 
@@ -123,14 +134,15 @@ public class robotHardware {
         motorturret = hwMap.get(DcMotorEx.class, "turret");
         motorintake = hwMap.get(DcMotor.class, "intake");
 
-
-        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+        pinpoint = hwMap.get(GoBildaPinpointDriver.class, "pinpoint");
 
         // get shooter as DcMotorEx to expose velocity control
         motorshoot = hwMap.get(DcMotorEx.class, "shoot");
         elevator = hwMap.get(DcMotorEx.class, "elevator");
 
         gate = hwMap.get(Servo.class, "gate");
+        flapper2 = hwMap.get(Servo.class, "flapper2");
+        flapper3 = hwMap.get(Servo.class, "flapper3");
         limelight = hwMap.get(Limelight3A.class, "limelight");
         //pushServo = hwMap.get(CRServo.class, "pushServo");
         distanceF = hwMap.get(DistanceSensor.class, "distanceF");
@@ -186,7 +198,9 @@ public class robotHardware {
         yaw0 = orientation0.getYaw(AngleUnit.DEGREES);
         shootTimer.reset();
 //        gate.setPosition(GATE_READY);
-        gate.setPosition(GATE_SHOOT);
+        gate.setPosition(GATE_CLOSE);
+        flapper2.setPosition(FLAPPER_2_OPEN);
+        flapper3.setPosition(FLAPPER_3_OPEN);
     }
 
     public void setAutoDriveMotorMode() {

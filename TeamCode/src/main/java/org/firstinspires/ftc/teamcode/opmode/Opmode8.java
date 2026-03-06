@@ -1,7 +1,11 @@
 package org.firstinspires.ftc.teamcode.opmode;
 
-import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_READY;
-import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_SHOOT;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.FLAPPER_2_CLOSE;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.FLAPPER_2_OPEN;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.FLAPPER_3_CLOSE;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.FLAPPER_3_OPEN;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_CLOSE;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_OPEN;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.TelemetryManager;
@@ -15,6 +19,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcontroller.external.samples.RobotHardware;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
@@ -237,11 +242,12 @@ public class Opmode8 extends LinearOpMode {
             if (gamepad2.dpad_up) {
                 if (triggerTimer.seconds() >= TRIGGER_SHOOT_TIME) {
                     triggerTimer.reset();
-                    robot.gate.setPosition(GATE_SHOOT);
+                    robot.gate.setPosition(GATE_OPEN);
+                    robot.flapper2.setPosition(FLAPPER_2_CLOSE);
+                    robot.flapper3.setPosition(FLAPPER_3_CLOSE);
                     bTriggerEnabled = true;
                 }
             }
-
             else if(gamepad2.dpad_down) {
                 turretMode = !turretMode;
                 if(turretMode){
@@ -253,16 +259,14 @@ public class Opmode8 extends LinearOpMode {
                     sleep(500);
                 }
             }
-
-            else {
-                if ((bTriggerEnabled && triggerTimer.seconds() >= TRIGGER_SHOOT_TIME) && (robot.motorshoot.getVelocity() < 1000)){
-                    robot.gate.setPosition(GATE_READY);
+            else if (bTriggerEnabled && triggerTimer.seconds() >= TRIGGER_SHOOT_TIME) {
+                robot.flapper2.setPosition(FLAPPER_2_OPEN);
+                robot.flapper3.setPosition(FLAPPER_3_OPEN);
+                if (robot.motorshoot.getVelocity() < 1000){
+                    robot.gate.setPosition(GATE_CLOSE);
                     bTriggerEnabled = false;
                 }
             }
-
-
-
 
             //elevator
             runElevatorStateMachine();
