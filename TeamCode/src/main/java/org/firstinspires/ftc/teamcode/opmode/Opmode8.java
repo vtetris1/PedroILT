@@ -76,12 +76,6 @@ public class Opmode8 extends LinearOpMode {
             (elevator_target_height_inches / CIRCUMFERENCE_HTD5M_PULLEY_24T_IN_INCHES * TICKS_PER_REVOLUTION_ELEVATOR_MOTOR); //fix should be about 10,500
 
     // Constants for GoBilda 5203 6000 rpm motor
-    static final double TICKS_PER_REVOLUTION = 28.0;
-    static final double MAX_TICKS_PER_SEC = 2800.0;
-
-
-
-
     private final double SHOOTER_RPM_SHORT = 2600.0; //3000 // 28x2786/60 //28
     private final double SHOOTER_RPM_LONG = 3050; //36?
     private final double SHOOTER_RPM_CLEAR = -500;
@@ -93,11 +87,52 @@ public class Opmode8 extends LinearOpMode {
     private double controller1Speed = 1.0;
     ElapsedTime controller1SpeedChangeTimer = new ElapsedTime();
 
+    
     ElapsedTime triggerTimer = new ElapsedTime();
+    ElapsedTime intakeStartTimer = new ElapsedTime();
+    ElapsedTime shootTimer1 = new ElapsedTime();
+    ElapsedTime shootTimer2 = new ElapsedTime();
+    ElapsedTime shootTimer3 = new ElapsedTime();
+    static final double INTAKE_START_TIME = 0.3;
+    static final double SHOOT_1_TIME = 0.3;
+    static final double SHOOT_2_TIME = 0.3;
+    static final double SHOOT_3_TIME = 0.3;
+
     static final double TRIGGER_SHOOT_TIME = 0.5;
 
     static final double SPEED_CHANGE_TIME = 0.15; // seconds to handle physical button/key natural time
+
+ 
+    public enum SHOOT_STATES {
+        IDLE,
+        SPIN_UP,
+        START_INTAKE,
+        SHOOT_1ST,
+        SHOOT_2ND,
+        SHOOT_3RD,
+        SHOOTING,  // trigger SHOOT state
+        SHOOT_DONE,   // trigger back to READY
+    }
+    // 🔹 UPDATED STATE MACHINE
+
+    private SHOOT_STATES shootState;
+    private boolean bShootRequested = false;
+    final double STOP_SPEED = 0.0;
+
     boolean bTriggerEnabled = false;
+
+    // Constants for GoBilda 5203 6000 rpm motor
+    static final double TICKS_PER_REVOLUTION = 28.0;
+    static final double MAX_TICKS_PER_SEC = 2800.0;
+
+    final double SHOOTER_TARGET_INIT_RPM = SHOOTER_RPM_SHORT;    // RPM: Rotations Per Minute
+    final double SHOOTER_TARGET_RANGE = 100;
+
+    private double shooter_target_rpm = SHOOTER_TARGET_INIT_RPM;
+    private double shooter_target_ticks = shooter_target_rpm * TICKS_PER_REVOLUTION / 60;
+    private double shooter_target_ticks_low= (shooter_target_rpm - SHOOTER_TARGET_RANGE) * TICKS_PER_REVOLUTION / 60;
+
+
     private Follower follower;
     public static Pose startingPose; //See ExampleAuto to understand how to use this
     private boolean automatedDrive;
@@ -140,6 +175,7 @@ public class Opmode8 extends LinearOpMode {
     public void runOpMode() {
 
         robot.init(hardwareMap);
+        bShootRequested = false;
         waitForStart();
 
         controller1SpeedChangeTimer.reset();
@@ -243,8 +279,6 @@ public class Opmode8 extends LinearOpMode {
                 if (triggerTimer.seconds() >= TRIGGER_SHOOT_TIME) {
                     triggerTimer.reset();
                     robot.gate.setPosition(GATE_OPEN);
-                    robot.flapper2.setPosition(FLAPPER_2_CLOSE);
-                    robot.flapper3.setPosition(FLAPPER_3_CLOSE);
                     bTriggerEnabled = true;
                 }
             }
@@ -259,15 +293,20 @@ public class Opmode8 extends LinearOpMode {
                     sleep(500);
                 }
             }
+            else if (gamepad2.left_trigger > 0.5) {
+                bShootRequested = true;
+            }
+            else if (gamepad2.left_bumper) {
+                bShootRequested = false;
+            }
             else if (bTriggerEnabled && triggerTimer.seconds() >= TRIGGER_SHOOT_TIME) {
-                robot.flapper2.setPosition(FLAPPER_2_OPEN);
-                robot.flapper3.setPosition(FLAPPER_3_OPEN);
                 if (robot.motorshoot.getVelocity() < 1000){
                     robot.gate.setPosition(GATE_CLOSE);
                     bTriggerEnabled = false;
                 }
             }
 
+            runShootStateMachine();
             //elevator
             runElevatorStateMachine();
             // --- TELEMETRY ---
@@ -354,5 +393,75 @@ public class Opmode8 extends LinearOpMode {
         robot.elevator.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
+    void runShootStateMachine() {
+
+        switch (shootState) {
+            case IDLE:
+                if (bShootRequested) {
+                    shootState = SHOOT_STATES.SPIN_UP;
+                }
+                break;
+            case SPIN_UP:
+                if (bShootRequested) {
+                    robot.gate.setPosition(GATE_OPEN);
+                    if (robot.motorshoot.getVelocity() > shooter_target_ticks_low) {
+                        shootState = SHOOT_STATES.START_INTAKE;
+                        intakeStartTimer.reset();
+                    }
+                }
+                break;
+            case START_INTAKE:
+                if (bShootRequested) {
+                    robot.motorintake.setPower(-1.0);
+                    if (intakeStartTimer.seconds() > INTAKE_START_TIME) {
+                        shootState = SHOOT_STATES.SHOOT_1ST;
+                        shootTimer1.reset();
+                    }
+                }
+                break;
+
+            case SHOOT_1ST:
+                if (bShootRequested) {
+                    // Shoot 1st artifact by intake stage 3 flapper
+                    robot.flapper3.setPosition(FLAPPER_3_CLOSE);
+                    if (shootTimer1.seconds() > SHOOT_1_TIME) {
+                        shootState = SHOOT_STATES.SHOOT_2ND;
+                        shootTimer2.reset();
+                    }
+                }
+                break;
+            case SHOOT_2ND:
+                if (bShootRequested) {
+                    // Shoot 2nd artifact by intake stage 2 flapper while keeping stage 3 flapper closed.
+                    robot.flapper2.setPosition(FLAPPER_2_CLOSE);
+                    robot.flapper3.setPosition(FLAPPER_3_CLOSE);
+                    if (shootTimer2.seconds() > SHOOT_2_TIME) {
+                        shootState = SHOOT_STATES.SHOOT_3RD;
+                        shootTimer3.reset();
+                    }
+                }
+                break;
+            case SHOOT_3RD:
+                if (bShootRequested) {
+                    // Shoot 3rd artifact while keeping both flappers close
+                    robot.flapper2.setPosition(FLAPPER_2_CLOSE);
+                    robot.flapper3.setPosition(FLAPPER_3_CLOSE);
+                    if (shootTimer3.seconds() > SHOOT_3_TIME) {
+                        bShootRequested = false;
+                    }
+                }
+                break;
+        }
+        if (bShootRequested) {
+            robot.gate.setPosition(GATE_OPEN);
+            robot.motorshoot.setVelocity(shooter_target_ticks);
+        }
+        else {
+            robot.flapper2.setPosition(FLAPPER_2_OPEN);
+            robot.flapper3.setPosition(FLAPPER_3_OPEN);
+            shootState = SHOOT_STATES.IDLE;
+            robot.motorshoot.setVelocity(STOP_SPEED);
+        }
+    }
 }
 

@@ -92,7 +92,7 @@ public class robotHardware {
     public static final double GATE_OPEN = 0.5; //0.2
     // Flapper for 2nd stage intake
     public static final double FLAPPER_2_OPEN = 0.1;
-    public static final double FLAPPER_2_CLOSE = 0.9;
+    public static final double FLAPPER_2_CLOSE = 0.7;
     // Flapper is open to hold an artifact without touching the 3rd stage intake.
     public static final double FLAPPER_3_OPEN = 0.514;
     public static final double FLAPPER_3_CLOSE = 0.499;
