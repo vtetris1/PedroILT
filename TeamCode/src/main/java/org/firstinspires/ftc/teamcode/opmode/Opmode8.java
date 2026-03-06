@@ -94,9 +94,9 @@ public class Opmode8 extends LinearOpMode {
     ElapsedTime shootTimer2 = new ElapsedTime();
     ElapsedTime shootTimer3 = new ElapsedTime();
     static final double INTAKE_START_TIME = 1.0;
-    static final double SHOOT_1_TIME = 1.0;
-    static final double SHOOT_2_TIME = 1.0;
-    static final double SHOOT_3_TIME = 1.0;
+    static final double SHOOT_1_TIME = 0.7;
+    static final double SHOOT_2_TIME = 0.7;
+    static final double SHOOT_3_TIME = 0.7;
 
     static final double TRIGGER_SHOOT_TIME = 0.5;
 
@@ -125,7 +125,7 @@ public class Opmode8 extends LinearOpMode {
     static final double TICKS_PER_REVOLUTION = 28.0;
     static final double MAX_TICKS_PER_SEC = 2800.0;
 
-    final double SHOOTER_TARGET_INIT_RPM = 2900;    // RPM: Rotations Per Minute
+    final double SHOOTER_TARGET_INIT_RPM = 2800;    // RPM: Rotations Per Minute
     final double SHOOTER_TARGET_RANGE = 100;
 
     private double shooter_target_rpm = SHOOTER_TARGET_INIT_RPM;
@@ -188,7 +188,7 @@ public class Opmode8 extends LinearOpMode {
             boolean x = gamepad2.x;
 
 //DRIVING
-            double x_dir = -gamepad1.left_stick_x * controller1Speed;
+            double x_dir = gamepad1.left_stick_x * controller1Speed;
             double y_dir = -gamepad1.left_stick_y * controller1Speed;
             double turn = gamepad1.right_stick_x * controller1Speed;
 
@@ -432,6 +432,7 @@ public class Opmode8 extends LinearOpMode {
             case SHOOT_2ND:
                 if (bShootRequested) {
                     // Shoot 2nd artifact by intake stage 2 flapper while keeping stage 3 flapper closed.
+                    sleep(200);
                     robot.flapper2.setPosition(FLAPPER_2_CLOSE);
                     robot.flapper3.setPosition(FLAPPER_3_CLOSE);
                     if (shootTimer2.seconds() > SHOOT_2_TIME) {
@@ -443,6 +444,7 @@ public class Opmode8 extends LinearOpMode {
             case SHOOT_3RD:
                 if (bShootRequested) {
                     // Shoot 3rd artifact while keeping both flappers close
+                    sleep(200);
                     robot.flapper2.setPosition(FLAPPER_2_CLOSE);
                     robot.flapper3.setPosition(FLAPPER_3_CLOSE);
                     if (shootTimer3.seconds() > SHOOT_3_TIME) {
@@ -460,6 +462,7 @@ public class Opmode8 extends LinearOpMode {
             robot.flapper3.setPosition(FLAPPER_3_OPEN);
             shootState = SHOOT_STATES.IDLE;
             robot.motorshoot.setVelocity(STOP_SPEED);
+            robot.gate.setPosition(GATE_CLOSE);
         }
     }
 }
