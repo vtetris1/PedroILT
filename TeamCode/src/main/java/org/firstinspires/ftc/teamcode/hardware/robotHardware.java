@@ -97,6 +97,7 @@ public class robotHardware {
     public static final double FLAPPER_3_OPEN = 0.514;
     public static final double FLAPPER_3_CLOSE = 0.499;
 
+
     boolean bShootRequested = false;
     int countShots = 0;
 
