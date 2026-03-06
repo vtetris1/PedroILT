@@ -22,7 +22,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcontroller.external.samples.RobotHardware;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
@@ -32,8 +31,8 @@ import org.firstinspires.ftc.teamcode.hardware.robotHardware;
 import java.util.function.Supplier;
 
 @Configurable
-@TeleOp(name = "Opmode8")
-public class Opmode8 extends LinearOpMode {
+@TeleOp(name = "Opmode9")
+public class Opmode9 extends LinearOpMode {
     robotHardware robot = new robotHardware();
 
     private boolean prevA = false;

@@ -69,7 +69,7 @@ public class robotHardware {
     final double STOP_SPEED = 0.0;
     static final double TICKS_PER_REVOLUTION = 28.0;
 
-    final double SHOOTER_TARGET_INIT_RPM = 2400;    // RPM: Rotations Per Minute
+    final double SHOOTER_TARGET_INIT_RPM = 2500;    // RPM: Rotations Per Minute
     final double SHOOTER_TARGET_RANGE = 100;
 
 
@@ -96,6 +96,10 @@ public class robotHardware {
     // Flapper is open to hold an artifact without touching the 3rd stage intake.
     public static final double FLAPPER_3_OPEN = 0.514;
     public static final double FLAPPER_3_CLOSE = 0.499;
+
+    public static final double INTAKE_POWER_INTAKE = -1.0;
+    public static final double INTAKE_POWER_OUTTAKE = 1.0;
+    public static final double INTAKE_POWER_STOP = 0.0;
 
 
     boolean bShootRequested = false;
