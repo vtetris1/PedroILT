@@ -102,7 +102,7 @@ public class Opmode9 extends LinearOpMode {
     static final double SHOOT_1_TIME = 0.8;
     static final double SHOOT_2_TIME = 0.5;
     static final double TRIGGER_2_TIME = 0.5;
-    static final double SHOOT_3_TIME = 0.5;
+    static final double SHOOT_3_TIME = 0.8;
     static final double TRIGGER_3_TIME = 0.5;
 
     static final double TRIGGER_SHOOT_TIME = 0.5;
@@ -162,12 +162,12 @@ public class Opmode9 extends LinearOpMode {
     }
 
 
-    Limelight3A limelight;
-    public void localizationUpdate(){
+    public void localizationUpdate() {
 
-        LLResult result = limelight.getLatestResult();
-        limelight.updateRobotOrientation(robot.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
+        LLResult result = robot.limelight.getLatestResult();
+        robot.limelight.updateRobotOrientation(robot.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
         robot.pinpoint.update();
+
 
         if (result != null && result.isValid()) {
             Pose3D botpose = result.getBotpose();
@@ -179,6 +179,13 @@ public class Opmode9 extends LinearOpMode {
             robot.pinpoint.setPosition(new Pose2D(DistanceUnit.MM, fieldX, fieldY, AngleUnit.DEGREES, fieldHeading));
         }
 
+        Pose2D currentPos = robot.pinpoint.getPosition();
+
+        telemetry.addData("Status", robot.pinpoint.getDeviceStatus());
+        telemetry.addData("X (mm)", currentPos.getX(DistanceUnit.MM));
+        telemetry.addData("Y (mm)", currentPos.getY(DistanceUnit.MM));
+        telemetry.addData("Heading", currentPos.getHeading(AngleUnit.DEGREES));
+        telemetry.update();
     }
 
 
@@ -219,18 +226,7 @@ public class Opmode9 extends LinearOpMode {
 
             if (gamepad1.dpad_left) {
 
-                LLResult result = robot.limelight.getLatestResult();
-
-                if (result != null && result.isValid()) {
-                    Pose3D pose = result.getBotpose();
-                    //limelight.
-
-                    telemetry.addData("x", "%.2f m", pose.getPosition().x);
-                    telemetry.addData("y",      "%.2f m", pose.getPosition().y);
-                    telemetry.addData("heading", "%.2f deg", pose.getOrientation().getYaw());
-                } else {
-                    telemetry.addData("e:", "Tag 24 Not Found");
-                }
+                localizationUpdate();
             }
 
             //intake/middle
@@ -465,7 +461,7 @@ public class Opmode9 extends LinearOpMode {
                 if (bShootRequested) {
 
                     robot.motorintake.setPower(-0.5);
-                    sleep(500);
+                    sleep(1500);
 
                     robot.motorintake.setPower(INTAKE_POWER_INTAKE);
 
