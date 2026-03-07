@@ -1,16 +1,12 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 
 import static java.lang.Thread.sleep;
 
-import com.bylazar.field.Line;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -101,6 +97,8 @@ public class robotHardware {
     public static final double INTAKE_POWER_OUTTAKE = 1.0;
     public static final double INTAKE_POWER_STOP = 0.0;
 
+    private final double turretTicksPerDegree = 14.8;
+
 
     boolean bShootRequested = false;
     int countShots = 0;
@@ -171,7 +169,7 @@ public class robotHardware {
         motorshoot.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         motorshoot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        double kp = 94.92;
+        double kp = 144.92; //94
         double ki = 0.18;
         double kd = 4.29;
         double kf = 11.5;
@@ -221,6 +219,18 @@ public class robotHardware {
         motorbr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorbl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
+
+    public double getTurretTicks(double tx){
+        double turretDist = 1.0; // inches
+
+
+
+
+
+        return ticksPerDegree;
+    }
+
+
 
     public double getCurrentYaw() {
         return imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
@@ -464,4 +474,6 @@ public class robotHardware {
     public boolean isShootRequested() {
         return bShootRequested;
     }
+
+
 }
