@@ -219,7 +219,7 @@ public class Opmode9 extends LinearOpMode {
 
             if (gamepad1.dpad_left) {
 
-                LLResult result = limelight.getLatestResult();
+                LLResult result = robot.limelight.getLatestResult();
 
                 if (result != null && result.isValid()) {
                     Pose3D pose = result.getBotpose();
@@ -463,7 +463,14 @@ public class Opmode9 extends LinearOpMode {
                 break;
             case START_INTAKE1:
                 if (bShootRequested) {
+
+                    robot.motorintake.setPower(-0.5);
+                    sleep(500);
+
                     robot.motorintake.setPower(INTAKE_POWER_INTAKE);
+
+
+
                     if (intakeStartTimer.seconds() > INTAKE_START_TIME) {
                         shootState = SHOOT_STATES.SHOOT_1ST;
                         shootTimer1.reset();
