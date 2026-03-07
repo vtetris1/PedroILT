@@ -13,8 +13,10 @@ import static org.firstinspires.ftc.teamcode.hardware.robotHardware.INTAKE_POWER
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
+import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.LLResult;
  import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -26,7 +28,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.hardware.robotHardware;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.pedroPathing.PoseItem;
 
+import java.util.ArrayList;
 import java.util.function.Supplier;
 
 @Configurable
@@ -97,13 +102,17 @@ public class Opmode9 extends LinearOpMode {
     private boolean flapper2ManualTriggered = false;
     private boolean flapper3ManualTriggered = false;
 
+    private boolean localizationActive = false;
+
     static final double INTAKE_START_TIME = 0.8;
-    static final double SHOOT_1_TIME = 0.8;
+    static final double SHOOT_1_TIME = 0.7;
     static final double SHOOT_2_TIME = 0.5;
     static final double TRIGGER_2_TIME = 0.5;
-    static final double SHOOT_3_TIME = 0.8;
+    static final double SHOOT_3_TIME = 0.3;
     static final double TRIGGER_3_TIME = 0.5;
 
+
+    protected final Pose park_place = new Pose(38, 25, Math.toRadians(180));
     static final double TRIGGER_SHOOT_TIME = 0.5;
 
     static final double SPEED_CHANGE_TIME = 0.15; // seconds to handle physical button/key natural time
@@ -161,11 +170,17 @@ public class Opmode9 extends LinearOpMode {
     }
 
 
+    private Timer pathTimer, actionTimer, opmodeTimer;
+    private int pathState;
+    ArrayList<PoseItem> poseList = new ArrayList<PoseItem>() ;
+
     public void localizationUpdate(){
 
         LLResult result = robot.limelight.getLatestResult();
         robot.limelight.updateRobotOrientation(robot.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
         robot.pinpoint.update();
+
+        follower = Constants.createFollower(hardwareMap);
 
         if (result != null && result.isValid()) {
             Pose3D botpose = result.getBotpose();
@@ -222,8 +237,6 @@ public class Opmode9 extends LinearOpMode {
 
             robot.setDrivePower(flPower, frPower, blPower, brPower);
 
-
-            localizationUpdate();
             //intake/middle
             if(gamepad2.dpad_down) {
                 robot.motorintake.setPower(0.5);
@@ -251,15 +264,22 @@ public class Opmode9 extends LinearOpMode {
 
             // trigger to launch the single artifact
             if (gamepad2.dpad_up) {
-                turretMode = !turretMode;
-                if(turretMode){
-                    turretFactor = 0.33;
-                    sleep(500);
-                }
-                else{
-                    turretFactor = 1;
-                    sleep(500);
-                }
+//                turretMode = !turretMode;
+//                if(turretMode){
+//                    turretFactor = 0.33;
+//                    sleep(500);
+//                }
+//                else{
+//                    turretFactor = 1;
+//                    sleep(500);
+//                }
+                localizationActive = true;
+                robot.limelight.start();
+                localizationUpdate();
+
+                driveTo(park_place);
+
+
             }
             else if (gamepad2.right_trigger > 0.5) {
                 bShootRequested = true;
@@ -453,7 +473,7 @@ public class Opmode9 extends LinearOpMode {
                 if (bShootRequested) {
 
                     robot.motorintake.setPower(0.5);
-                    sleep(50);
+                    sleep(30);
 
                     robot.motorintake.setPower(INTAKE_POWER_INTAKE);
 
@@ -474,6 +494,7 @@ public class Opmode9 extends LinearOpMode {
                         shootState = SHOOT_STATES.SPIN_UP2;
                         robot.flapper3.setPosition(FLAPPER_3_OPEN);
                     }
+                    sleep(100);
                 }
                 break;
 
@@ -501,6 +522,7 @@ public class Opmode9 extends LinearOpMode {
 
                         robot.flapper3.setPosition(FLAPPER_3_OPEN);
                         robot.flapper2.setPosition(FLAPPER_2_OPEN);
+                        sleep(100);
                     }
                 }
                 break;
@@ -542,5 +564,13 @@ public class Opmode9 extends LinearOpMode {
             robot.flapper2.setPosition(FLAPPER_2_OPEN);
         }
     }
+
+    public void driveTo(Pose target) {
+        follower.followPath(follower.pathBuilder()
+                .addPath(new BezierLine(follower.getPose(), target))
+                .setLinearHeadingInterpolation(follower.getPose().getHeading(), target.getHeading())
+                .build(), true);
+    }
+
 }
 

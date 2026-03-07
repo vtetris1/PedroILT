@@ -147,6 +147,7 @@ public class robotHardware {
         flapper2 = hwMap.get(Servo.class, "flapper2");
         flapper3 = hwMap.get(Servo.class, "flapper3");
         limelight = hwMap.get(Limelight3A.class, "limelight");
+        limelight.stop();
         //pushServo = hwMap.get(CRServo.class, "pushServo");
         distanceF = hwMap.get(DistanceSensor.class, "distanceF");
         distanceR = hwMap.get(DistanceSensor.class, "distanceR");
@@ -169,9 +170,9 @@ public class robotHardware {
         motorshoot.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         motorshoot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        double kp = 144.92; //94
+        double kp = 300.92; //94
         double ki = 0.18;
-        double kd = 4.29;
+        double kd = 150.29;
         double kf = 11.5;
 
         motorshoot.setPIDFCoefficients(
