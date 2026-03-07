@@ -7,7 +7,7 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.autonomous.AutoHardware2;
-
+//yooooo help
 import java.util.ArrayList;
 
 public abstract class AutoPedroCommon extends OpMode {
