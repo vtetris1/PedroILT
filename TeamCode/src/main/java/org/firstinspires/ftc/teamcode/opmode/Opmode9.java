@@ -182,9 +182,9 @@ public class Opmode9 extends LinearOpMode {
         Pose2D currentPos = robot.pinpoint.getPosition();
 
         telemetry.addData("Status", robot.pinpoint.getDeviceStatus());
-        telemetry.addData("X (mm)", currentPos.getX(DistanceUnit.MM));
-        telemetry.addData("Y (mm)", currentPos.getY(DistanceUnit.MM));
-        telemetry.addData("Heading", currentPos.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("x", currentPos.getX(DistanceUnit.MM));
+        telemetry.addData("y", currentPos.getY(DistanceUnit.MM));
+        telemetry.addData("heading", currentPos.getHeading(AngleUnit.DEGREES));
         telemetry.update();
     }
 
@@ -351,12 +351,12 @@ public class Opmode9 extends LinearOpMode {
             //elevator
             runElevatorStateMachine();
             // --- TELEMETRY ---
-            telemetry.addData("intakePower", robot.motorintake.getPower());
-            telemetry.addData("shooter velocity", (robot.motorshoot.getVelocity() * 2 ));
-            telemetry.addData("shooter tpr", robot.motorshoot.getMotorType().getTicksPerRev());
-            telemetry.addData("shooter rpm", shooter_target_rpm);
-            telemetry.addData("controller1Speed", controller1Speed);
-            telemetry.addData("turret factor", turretFactor);
+//            telemetry.addData("intakePower", robot.motorintake.getPower());
+//            telemetry.addData("shooter velocity", (robot.motorshoot.getVelocity() * 2 ));
+//            telemetry.addData("shooter tpr", robot.motorshoot.getMotorType().getTicksPerRev());
+//            telemetry.addData("shooter rpm", shooter_target_rpm);
+//            telemetry.addData("controller1Speed", controller1Speed);
+//            telemetry.addData("turret factor", turretFactor);
             telemetry.update();
             idle();
         }
@@ -425,10 +425,10 @@ public class Opmode9 extends LinearOpMode {
                 }
                 break;
         }
-        telemetry.addData("parkState", parkState);
-        telemetry.addData("elevatorInches", elevator_target_height_inches);
-        telemetry.addData("elevatorTicks", elevator_target_height_ticks);
-        telemetry.addData("elevatorPos", robot.elevator.getCurrentPosition());
+//        telemetry.addData("parkState", parkState);
+//        telemetry.addData("elevatorInches", elevator_target_height_inches);
+//        telemetry.addData("elevatorTicks", elevator_target_height_ticks);
+//        telemetry.addData("elevatorPos", robot.elevator.getCurrentPosition());
     }
 
     void goDownSlowly() {
