@@ -33,8 +33,8 @@ public abstract class AutoPedroCommon extends OpMode {
     protected final Pose blue_near_turn_left = new Pose(57, 10, Math.toRadians(180));
     protected final Pose blue_near_corner = new Pose(22, 10, Math.toRadians(180));
 
-    protected final Pose red_far_init = new Pose(112, 127, Math.toRadians(45)); // Start Pose of our robot.
-    protected final Pose red_far_score = new Pose(88, 90, Math.toRadians(45)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    protected final Pose red_far_init = new Pose(112, 127, Math.toRadians(-45)); // Start Pose of our robot.
+    protected final Pose red_far_score = new Pose(88, 90, Math.toRadians(-45)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     protected final Pose red_1st_row_start = new Pose(90, 83, Math.toRadians(0)); // Highest (First Set) of Artifacts from the Spike Mark.
     protected final Pose red_1st_row_end = new Pose(120, 81, Math.toRadians(0)); // Middle (Second Set) of Artifacts from the Spike Mark.
     protected final Pose red_2nd_row_start = new Pose(90, 60, Math.toRadians(0)); // Highest (First Set) of Artifacts from the Spike Mark.
@@ -44,7 +44,7 @@ public abstract class AutoPedroCommon extends OpMode {
     protected final Pose red_gate = new Pose(127, 65, Math.toRadians(10));
     protected final Pose red_parking = new Pose(100, 38, Math.toRadians(0));
     protected final Pose red_near_init = new Pose(73, 9, Math.toRadians(90)); // Start Pose of our robot.
-    protected final Pose red_near_score = new Pose(76, 14, Math.toRadians(80)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    protected final Pose red_near_score = new Pose(76, 14, Math.toRadians(-80)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     protected final Pose red_near_turn_left = new Pose(80, 10, Math.toRadians(0));
     protected final Pose red_near_corner = new Pose(100, 10, Math.toRadians(0));
     public abstract void setPath();
