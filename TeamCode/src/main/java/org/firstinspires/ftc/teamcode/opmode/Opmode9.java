@@ -104,11 +104,11 @@ public class Opmode9 extends LinearOpMode {
 
     private boolean localizationActive = false;
 
-    static final double INTAKE_START_TIME = 0.8;
-    static final double SHOOT_1_TIME = 0.7;
-    static final double SHOOT_2_TIME = 0.5;
+    static final double INTAKE_START_TIME = 0.5;
+    static final double SHOOT_1_TIME = 0.5;
+    static final double SHOOT_2_TIME = 1.5;
     static final double TRIGGER_2_TIME = 0.5;
-    static final double SHOOT_3_TIME = 0.3;
+    static final double SHOOT_3_TIME = 1.5;
     static final double TRIGGER_3_TIME = 0.5;
 
 
