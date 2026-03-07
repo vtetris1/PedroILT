@@ -178,8 +178,8 @@ public class Opmode9 extends LinearOpMode {
 
             robot.pinpoint.setPosition(new Pose2D(DistanceUnit.MM, fieldX, fieldY, AngleUnit.DEGREES, fieldHeading));
         }
-
         Pose2D currentPos = robot.pinpoint.getPosition();
+
 
         telemetry.addData("Status", robot.pinpoint.getDeviceStatus());
         telemetry.addData("x", currentPos.getX(DistanceUnit.MM));
@@ -224,24 +224,14 @@ public class Opmode9 extends LinearOpMode {
 
             robot.setDrivePower(flPower, frPower, blPower, brPower);
 
-            if (gamepad1.dpad_left) {
 
-                LLResult result = robot.limelight.getLatestResult();
-
-                if (result != null && result.isValid()) {
-                    Pose3D pose = result.getBotpose();
-                    //limelight.
-
-                    telemetry.addData("x", "%.2f m", pose.getPosition().x);
-                    telemetry.addData("y",      "%.2f m", pose.getPosition().y);
-                    telemetry.addData("heading", "%.2f deg", pose.getOrientation().getYaw());
-                } else {
-                    telemetry.addData("e:", "Tag 24 Not Found");
-                }
-            }
-
+            localizationUpdate();
             //intake/middle
-            if (gamepad1.left_bumper){
+            if(gamepad2.dpad_down) {
+                robot.motorintake.setPower(0.5);
+                sleep(50);
+            }
+            else if (gamepad1.left_bumper){
                 robot.motorintake.setPower(INTAKE_POWER_INTAKE);
             } else if (gamepad1.left_trigger > 0.5){
                 robot.motorintake.setPower(INTAKE_POWER_OUTTAKE);
