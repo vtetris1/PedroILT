@@ -176,27 +176,13 @@ public class Opmode9 extends LinearOpMode {
     private int pathState;
     ArrayList<PoseItem> poseList = new ArrayList<PoseItem>() ;
 
-    public void relocalizeWithLimelight() {
-        LLResult result = robot.limelight.getLatestResult();
-        if (result != null && result.isValid()) {
-            Pose3D botpose = result.getBotpose();
-            // Snap Pinpoint to the Vision data
-            robot.pinpoint.setPosition(new Pose2D(
-                    DistanceUnit.MM,
-                    botpose.getPosition().x * 1000,
-                    botpose.getPosition().y * 1000,
-                    AngleUnit.DEGREES,
-                    botpose.getOrientation().getYaw()
-            ));
-        }
-    }
-
     public void localizationUpdate(){
 
         LLResult result = robot.limelight.getLatestResult();
         robot.limelight.updateRobotOrientation(robot.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
-
         robot.pinpoint.update();
+
+        follower = Constants.createFollower(hardwareMap);
 
         if (result != null && result.isValid()) {
             Pose3D botpose = result.getBotpose();
@@ -207,13 +193,7 @@ public class Opmode9 extends LinearOpMode {
 
             robot.pinpoint.setPosition(new Pose2D(DistanceUnit.MM, fieldX, fieldY, AngleUnit.DEGREES, fieldHeading));
         }
-
         Pose2D currentPos = robot.pinpoint.getPosition();
-        follower.setPose(new Pose(
-                currentPos.getX(DistanceUnit.INCH),
-                currentPos.getY(DistanceUnit.INCH),
-                Math.toRadians(currentPos.getHeading(AngleUnit.DEGREES))
-        ));
 
 
         telemetry.addData("Status", robot.pinpoint.getDeviceStatus());
@@ -221,16 +201,6 @@ public class Opmode9 extends LinearOpMode {
         telemetry.addData("y", currentPos.getY(DistanceUnit.MM));
         telemetry.addData("heading", currentPos.getHeading(AngleUnit.DEGREES));
         telemetry.update();
-    }
-
-    public void updateOdometer() {
-        robot.pinpoint.update();
-        Pose2D pos = robot.pinpoint.getPosition();
-        follower.setPose(new Pose(
-                pos.getX(DistanceUnit.INCH),
-                pos.getY(DistanceUnit.INCH),
-                pos.getHeading(AngleUnit.RADIANS)
-        ));
     }
 
 
@@ -267,13 +237,7 @@ public class Opmode9 extends LinearOpMode {
             blPower = blPower / scaling;
             brPower = brPower / scaling;
 
-
-
             robot.setDrivePower(flPower, frPower, blPower, brPower);
-
-
-            updateOdometer();
-            follower.update();
 
             //intake/middle
             if(gamepad2.dpad_down) {
@@ -313,26 +277,21 @@ public class Opmode9 extends LinearOpMode {
 
 
             // trigger to launch the single artifact
+            if (gamepad2.dpad_up) {
+//                turretMode = !turretMode;
+//                if(turretMode){
+//                    turretFactor = 0.33;
+//                    sleep(500);
+//                }
+//                else{
+//                    turretFactor = 1;
+//                    sleep(500);
+//                }
+                localizationActive = true;
+                robot.limelight.start();
+                localizationUpdate();
 
-            if (localizationActive){
-                relocalizeWithLimelight();
-            }
-
-            if (gamepad2.dpad_up && gamepad2.a && localizationActive) {
                 driveTo(park_place);
-            }
-            else if (gamepad2.dpad_up) {
-
-                if (!localizationActive){
-                    localizationActive = true;
-                    robot.limelight.start();
-    //                localizationUpdate();
-
-                }
-                else{
-                    localizationActive = false;
-                    robot.limelight.stop();
-                }
 
 
             }
