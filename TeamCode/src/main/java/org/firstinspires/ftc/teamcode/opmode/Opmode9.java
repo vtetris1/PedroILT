@@ -134,8 +134,8 @@ public class Opmode9 extends LinearOpMode {
     static final double TICKS_PER_REVOLUTION = 28.0;
     static final double MAX_TICKS_PER_SEC = 2800.0;
 
-    private final double SHOOTER_RPM_SHORT = 2800.0; //3000 // 28x2786/60 //28
-    private final double SHOOTER_RPM_LONG = 3450.0; //36?
+    private final double SHOOTER_RPM_SHORT = 2700.0; //3000 // 28x2786/60 //28
+    private final double SHOOTER_RPM_LONG = 3350.0; //36?
 
     final double SHOOTER_TARGET_RANGE = 20;
 
@@ -263,11 +263,14 @@ public class Opmode9 extends LinearOpMode {
                     sleep(500);
                 }
             }
-
-            else if (gamepad2.left_trigger > 0.5) {
+            else if(gamepad2.dpad_down) {
+                robot.motorintake.setPower(0.5);
+                sleep(500);
+            }
+            else if (gamepad2.right_trigger > 0.5) {
                 bShootRequested = true;
             }
-            else if (gamepad2.left_bumper) {
+            else if (gamepad2.right_bumper) {
                 bShootRequested = false;
             }
             else if (bTriggerEnabled && triggerTimer.seconds() >= TRIGGER_SHOOT_TIME) {
@@ -279,7 +282,7 @@ public class Opmode9 extends LinearOpMode {
 
             // left trigger to manually close flapper 3
             // boolean flag is required in order not to mess up shooterStateMachine.
-            if (gamepad2.left_trigger > 0.5) {
+            if (gamepad2.right_trigger > 0.5) {
                 if (flapper3Timer.seconds() > FLAPPER_3_BUTTON_TIME) {
                     flapper3Timer.reset();
                     robot.flapper3.setPosition(FLAPPER_3_CLOSE);

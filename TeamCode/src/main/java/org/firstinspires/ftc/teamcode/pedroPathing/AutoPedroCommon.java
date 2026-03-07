@@ -6,6 +6,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import static org.firstinspires.ftc.teamcode.autonomous.AutoHardware2.SHOOT_STATES;
 
 import java.util.ArrayList;
 
@@ -95,6 +96,7 @@ public abstract class AutoPedroCommon extends OpMode {
     public boolean doneShooting() {
         if(pathTimer.getElapsedTimeSeconds() > 3) {
             pathTimer.resetTimer();
+
             return true;
         }
         else {
