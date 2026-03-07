@@ -102,7 +102,7 @@ public class Opmode9 extends LinearOpMode {
     static final double SHOOT_1_TIME = 0.8;
     static final double SHOOT_2_TIME = 0.5;
     static final double TRIGGER_2_TIME = 0.5;
-    static final double SHOOT_3_TIME = 0.8;
+    static final double SHOOT_3_TIME = 0.5;
     static final double TRIGGER_3_TIME = 0.5;
 
     static final double TRIGGER_SHOOT_TIME = 0.5;
@@ -162,12 +162,12 @@ public class Opmode9 extends LinearOpMode {
     }
 
 
-    public void localizationUpdate() {
+    Limelight3A limelight;
+    public void localizationUpdate(){
 
-        LLResult result = robot.limelight.getLatestResult();
-        robot.limelight.updateRobotOrientation(robot.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
+        LLResult result = limelight.getLatestResult();
+        limelight.updateRobotOrientation(robot.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
         robot.pinpoint.update();
-
 
         if (result != null && result.isValid()) {
             Pose3D botpose = result.getBotpose();
@@ -226,7 +226,18 @@ public class Opmode9 extends LinearOpMode {
 
             if (gamepad1.dpad_left) {
 
-                localizationUpdate();
+                LLResult result = robot.limelight.getLatestResult();
+
+                if (result != null && result.isValid()) {
+                    Pose3D pose = result.getBotpose();
+                    //limelight.
+
+                    telemetry.addData("x", "%.2f m", pose.getPosition().x);
+                    telemetry.addData("y",      "%.2f m", pose.getPosition().y);
+                    telemetry.addData("heading", "%.2f deg", pose.getOrientation().getYaw());
+                } else {
+                    telemetry.addData("e:", "Tag 24 Not Found");
+                }
             }
 
             //intake/middle
@@ -252,13 +263,6 @@ public class Opmode9 extends LinearOpMode {
 
             // trigger to launch the single artifact
             if (gamepad2.dpad_up) {
-                if (triggerTimer.seconds() >= TRIGGER_SHOOT_TIME) {
-                    triggerTimer.reset();
-                    robot.gate.setPosition(GATE_OPEN);
-                    bTriggerEnabled = true;
-                }
-            }
-            else if(gamepad2.dpad_down) {
                 turretMode = !turretMode;
                 if(turretMode){
                     turretFactor = 0.33;
@@ -268,6 +272,10 @@ public class Opmode9 extends LinearOpMode {
                     turretFactor = 1;
                     sleep(500);
                 }
+            }
+            else if(gamepad2.dpad_down) {
+                robot.motorintake.setPower(0.5);
+                sleep(500);
             }
             else if (gamepad2.left_trigger > 0.5) {
                 bShootRequested = true;
@@ -461,7 +469,7 @@ public class Opmode9 extends LinearOpMode {
                 if (bShootRequested) {
 
                     robot.motorintake.setPower(-0.5);
-                    sleep(1500);
+                    sleep(500);
 
                     robot.motorintake.setPower(INTAKE_POWER_INTAKE);
 
