@@ -261,10 +261,6 @@ public class Opmode9 extends LinearOpMode {
                     sleep(500);
                 }
             }
-            else if(gamepad2.dpad_down) {
-                robot.motorintake.setPower(0.5);
-                sleep(500);
-            }
             else if (gamepad2.right_trigger > 0.5) {
                 bShootRequested = true;
             }
@@ -456,8 +452,8 @@ public class Opmode9 extends LinearOpMode {
             case START_INTAKE1:
                 if (bShootRequested) {
 
-                    robot.motorintake.setPower(-0.5);
-                    sleep(500);
+                    robot.motorintake.setPower(0.5);
+                    sleep(50);
 
                     robot.motorintake.setPower(INTAKE_POWER_INTAKE);
 
