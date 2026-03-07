@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Red Near 1,2,3 rows ", group = "Examples")
+@Autonomous(name = "Red Near 1,2,3 rows ")
 public class AutoPedroRedNearFull extends AutoPedroCommon {
  //
     public void setPath(){

@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Blue Far Wait 20 seconds to shoot", group = "Examples")
+@Autonomous(name = "Blue Far Wait 20 seconds to shoot")
 public class AutoPedroBlueFar20Sec extends AutoPedroCommon {
 
     /*

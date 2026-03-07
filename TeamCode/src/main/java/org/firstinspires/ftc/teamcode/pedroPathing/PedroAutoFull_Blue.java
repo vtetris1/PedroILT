@@ -10,7 +10,7 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-@Autonomous(name = "Example PedroPathing Auto Full Blue", group = "Examples")
+@Autonomous(name = "Example PedroPathing Auto Full Blue")
 public class PedroAutoFull_Blue extends OpMode {
 
     private Follower follower;

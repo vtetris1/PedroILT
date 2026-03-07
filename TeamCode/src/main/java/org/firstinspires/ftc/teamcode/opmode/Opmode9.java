@@ -256,13 +256,6 @@ public class Opmode9 extends LinearOpMode {
 
             // trigger to launch the single artifact
             if (gamepad2.dpad_up) {
-                if (triggerTimer.seconds() >= TRIGGER_SHOOT_TIME) {
-                    triggerTimer.reset();
-                    robot.gate.setPosition(GATE_OPEN);
-                    bTriggerEnabled = true;
-                }
-            }
-            else if(gamepad2.dpad_down) {
                 turretMode = !turretMode;
                 if(turretMode){
                     turretFactor = 0.33;
@@ -272,6 +265,10 @@ public class Opmode9 extends LinearOpMode {
                     turretFactor = 1;
                     sleep(500);
                 }
+            }
+            else if(gamepad2.dpad_down) {
+                robot.motorintake.setPower(0.5);
+                sleep(500);
             }
             else if (gamepad2.left_trigger > 0.5) {
                 bShootRequested = true;

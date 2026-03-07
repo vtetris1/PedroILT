@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Blue Far 3rd row + corner balls", group = "Examples")
+@Autonomous(name = "Blue Far 3rd row + corner balls")
 public class AutoPedroBlueFar3rdRow extends AutoPedroCommon {
 
 

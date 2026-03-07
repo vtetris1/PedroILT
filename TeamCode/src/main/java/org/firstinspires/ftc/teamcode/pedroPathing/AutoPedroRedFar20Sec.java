@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Red Far Wait 20 seconds to shoot", group = "Examples")
+@Autonomous(name = "Red Far Wait 20 seconds to shoot")
 public class AutoPedroRedFar20Sec extends AutoPedroCommon {
 
     /*

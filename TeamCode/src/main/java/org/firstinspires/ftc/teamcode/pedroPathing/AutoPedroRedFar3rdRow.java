@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Red Far 3rd row + corner balls", group = "Examples")
+@Autonomous(name = "Red Far 3rd row + corner balls")
 public class AutoPedroRedFar3rdRow extends AutoPedroCommon {
 
 
