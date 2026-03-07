@@ -1,8 +1,14 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
 
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.FLAPPER_2_CLOSE;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.FLAPPER_2_OPEN;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.FLAPPER_3_CLOSE;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.FLAPPER_3_OPEN;
 import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_CLOSE;
 import static org.firstinspires.ftc.teamcode.hardware.robotHardware.GATE_OPEN;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.INTAKE_POWER_INTAKE;
+import static org.firstinspires.ftc.teamcode.hardware.robotHardware.INTAKE_POWER_STOP;
 import static java.lang.Thread.sleep;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -19,6 +25,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.opmode.Opmode9;
 
 /*
 import com.qualcomm.hardware.limelightvision.LLResult;
@@ -38,6 +45,11 @@ public class AutoHardware2 extends LinearOpMode {
     public DcMotor motorintake = null;
     public DcMotorEx motorturret = null;
     public Servo gate = null;
+    public Servo flapper2 = null;
+    // The flapper servo is to push the flapper inward so that artifacts can touch 3rd stage intake for shooting artifacts.
+    public Servo flapper3 = null;
+    //public CRServo pushServo = null;
+
     //public CRServo pushServo = null;
     public DcMotor elevator = null;
     //public Limelight3A limelight;
@@ -54,29 +66,32 @@ public class AutoHardware2 extends LinearOpMode {
     final double STOP_SPEED = 0.0;
     static final double TICKS_PER_REVOLUTION = 28.0;
 
-    final double SHOOTER_TARGET_INIT_RPM = 2400;    // RPM: Rotations Per Minute
-    final double SHOOTER_TARGET_RANGE = 50;
 
+    final double SHOOTER_TARGET_RANGE = 20;
 
     static final double MAX_TICKS_PER_SEC = 2800.0;
+    private final double SHOOTER_RPM_SHORT = 3500.0; //3000 // 28x2786/60 //28
+    private final double SHOOTER_RPM_LONG = 3450.0; //36?
 
-    private double shooter_target_rpm = SHOOTER_TARGET_INIT_RPM;
+    private double shooter_target_rpm = SHOOTER_RPM_SHORT;
     private double shooter_target_ticks = shooter_target_rpm * TICKS_PER_REVOLUTION / 60;
-    private double shooter_target_ticks_low = (shooter_target_rpm - SHOOTER_TARGET_RANGE) * TICKS_PER_REVOLUTION / 60;
+    private double shooter_target_ticks_low= (shooter_target_rpm - SHOOTER_TARGET_RANGE) * TICKS_PER_REVOLUTION / 60;
+
 
     /* The rpm is too high when shooting the artifact from the near side.
      * Hence, lower the target rpm when shooting the last artifact on near side.
      */
-    private double shooter_target_rpm_last_artifact = SHOOTER_TARGET_INIT_RPM;
+    private double shooter_target_rpm_last_artifact = SHOOTER_RPM_SHORT;
     private double shooter_target_ticks_last_artifact = shooter_target_rpm * TICKS_PER_REVOLUTION / 60;
 
 
-    // For motot encoders
+    // For motor encoders
     static final double TICKS_DRIVE_PER_REVOLUTION = 384.5;    // GoBilda 435 rpm Yellow Jacket Motor
     static final double DRIVE_GEAR_REDUCTION = 1.0;     // No External Gearing.
     static final double WHEEL_DIAMETER_INCHES = 4.0;     // For figuring circumference
     static final double TICKS_PER_INCH = (TICKS_DRIVE_PER_REVOLUTION * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
+
 
     boolean bShootRequested = false;
     int countShots = 0;
@@ -94,8 +109,49 @@ public class AutoHardware2 extends LinearOpMode {
         LAUNCHING_FINAL,  // trigger 2nd stage & 1st stage intake
         LAUNCHED,   // trigger back to READY
     }
-
     private LAUNCH_STATES launchState = LAUNCH_STATES.IDLE;
+
+
+    ElapsedTime triggerTimer = new ElapsedTime();
+    ElapsedTime intakeStartTimer = new ElapsedTime();
+    ElapsedTime shootTimer1 = new ElapsedTime();
+    ElapsedTime shootTimer2 = new ElapsedTime();
+    ElapsedTime triggerTimer2 = new ElapsedTime();
+    ElapsedTime shootTimer3 = new ElapsedTime();
+    ElapsedTime shooterSpeedChangeTimer = new ElapsedTime();
+    ElapsedTime flapper2Timer = new ElapsedTime();
+    ElapsedTime flapper3Timer = new ElapsedTime();
+    static final double FLAPPER_2_BUTTON_TIME = 0.2;
+    static final double FLAPPER_2_CLOSE_TIME = 0.5;
+    static final double FLAPPER_3_BUTTON_TIME = 0.2;
+    static final double FLAPPER_3_CLOSE_TIME = 0.5;
+    private boolean flapper2ManualTriggered = false;
+    private boolean flapper3ManualTriggered = false;
+
+    static final double INTAKE_START_TIME = 0.8;
+    static final double SHOOT_1_TIME = 0.8;
+    static final double SHOOT_2_TIME = 0.5;
+    static final double TRIGGER_2_TIME = 0.5;
+    static final double SHOOT_3_TIME = 0.5;
+    static final double TRIGGER_3_TIME = 0.5;
+
+    static final double SPEED_CHANGE_TIME = 0.15; // seconds to handle physical button/key natural time
+
+
+    public enum SHOOT_STATES {
+        IDLE,
+        SPIN_UP1,
+        START_INTAKE1,
+        SHOOT_1ST,
+        SPIN_UP2,
+        SHOOT_2ND,
+        SPIN_UP3,
+        SHOOT_3RD,
+    }
+    // 🔹 UPDATED STATE MACHINE
+
+    private SHOOT_STATES shootState = SHOOT_STATES.IDLE;
+
 
     public double ticksPerInch = 31.3;
     public double ticksPerDegree = 12;
@@ -126,6 +182,8 @@ public class AutoHardware2 extends LinearOpMode {
         elevator = hwMap.get(DcMotorEx.class, "elevator");
 
         gate = hwMap.get(Servo.class, "gate");
+        flapper2 = hwMap.get(Servo.class, "flapper2");
+        flapper3 = hwMap.get(Servo.class, "flapper3");
         //pushServo = hwMap.get(CRServo.class, "pushServo");
         //limelight = hwMap.get(Limelight3A.class, "limelight");
 
@@ -183,6 +241,23 @@ public class AutoHardware2 extends LinearOpMode {
         motorfl.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorbr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorbl.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        motorfr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorfl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorbr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorbl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    }
+
+    public void setAutoDriveMotorModeWithoutEncoder() {
+        motorfr.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorfl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorbr.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorbl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        motorfr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motorfl.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motorbr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motorbl.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         motorfr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorfl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -272,6 +347,7 @@ public class AutoHardware2 extends LinearOpMode {
                 shooter_target_rpm * TICKS_PER_REVOLUTION / 60));
         shooter_target_ticks_low = Math.max(0, Math.min(MAX_TICKS_PER_SEC,
                 (shooter_target_rpm - SHOOTER_TARGET_RANGE) * TICKS_PER_REVOLUTION / 60));
+
         shooter_target_rpm_last_artifact = target_rpm_last_artifact;
         shooter_target_ticks_last_artifact = Math.max(0, Math.min(MAX_TICKS_PER_SEC,
                 shooter_target_rpm_last_artifact * TICKS_PER_REVOLUTION / 60));
@@ -562,6 +638,121 @@ public class AutoHardware2 extends LinearOpMode {
         motorfr.setPower(0);
         motorbr.setPower(0);
     }
+
+
+    void runShootStateMachine() {
+
+        switch (shootState) {
+            case IDLE:
+                if (bShootRequested) {
+                    shootState = SHOOT_STATES.SPIN_UP1;
+                }
+                break;
+            case SPIN_UP1:
+                if (bShootRequested) {
+                    gate.setPosition(GATE_OPEN);
+                    if (motorshoot.getVelocity() > shooter_target_ticks_low) {
+                        shootState = SHOOT_STATES.START_INTAKE1;
+                        intakeStartTimer.reset();
+                    }
+                }
+                break;
+            case START_INTAKE1:
+                if (bShootRequested) {
+                    motorintake.setPower(INTAKE_POWER_INTAKE);
+                    if (intakeStartTimer.seconds() > INTAKE_START_TIME) {
+                        shootState = SHOOT_STATES.SHOOT_1ST;
+                        shootTimer1.reset();
+                    }
+                }
+                break;
+
+            case SHOOT_1ST:
+                if (bShootRequested) {
+                    // Shoot 1st artifact by intake stage 3 flapper
+                    flapper3.setPosition(FLAPPER_3_CLOSE);
+                    if (shootTimer1.seconds() > SHOOT_1_TIME) {
+                        shootState = SHOOT_STATES.SPIN_UP2;
+                        flapper3.setPosition(FLAPPER_3_OPEN);
+                    }
+                }
+                break;
+
+            case SPIN_UP2:
+                if (bShootRequested) {
+                    gate.setPosition(GATE_OPEN);
+                    if (motorshoot.getVelocity() > shooter_target_ticks_low) {
+                        shootState = SHOOT_STATES.SHOOT_2ND;
+                        shootTimer2.reset();
+                        flapper3.setPosition(FLAPPER_3_CLOSE);
+                        flapper2.setPosition(FLAPPER_2_CLOSE);
+                    }
+                }
+                break;
+
+            case SHOOT_2ND:
+                if (bShootRequested) {
+                    // Keep stage 3 flapper closed.
+                    // Shoot 2nd artifact by intake stage 2 flapper if target rpm reached
+                    flapper3.setPosition(FLAPPER_3_CLOSE);
+                    flapper2.setPosition(FLAPPER_2_CLOSE);
+                    motorintake.setPower(INTAKE_POWER_INTAKE);
+                    if (shootTimer2.seconds() > SHOOT_2_TIME) {
+                        shootState = SHOOT_STATES.SPIN_UP3;
+
+                        flapper3.setPosition(FLAPPER_3_OPEN);
+                        flapper2.setPosition(FLAPPER_2_OPEN);
+                    }
+                }
+                break;
+            case SPIN_UP3:
+                if (bShootRequested) {
+                    gate.setPosition(GATE_OPEN);
+                    if (motorshoot.getVelocity() > shooter_target_ticks_low) {
+                        shootState = SHOOT_STATES.SHOOT_3RD;
+                        shootTimer3.reset();
+                        flapper3.setPosition(FLAPPER_3_CLOSE);
+                        flapper2.setPosition(FLAPPER_2_CLOSE);
+                    }
+                }
+                break;
+
+            case SHOOT_3RD:
+                if (bShootRequested) {
+                    flapper3.setPosition(FLAPPER_3_CLOSE);
+                    flapper2.setPosition(FLAPPER_2_CLOSE);
+                    motorintake.setPower(INTAKE_POWER_INTAKE);
+                    if (shootTimer3.seconds() > SHOOT_3_TIME) {
+                        shootState = SHOOT_STATES.IDLE;
+                        bShootRequested = false;
+                        motorintake.setPower(INTAKE_POWER_STOP);
+                    }
+                }
+                break;
+        }
+        if (bShootRequested) {
+            gate.setPosition(GATE_OPEN);
+            motorshoot.setVelocity(shooter_target_ticks);
+        }
+        else {
+            shootState = SHOOT_STATES.IDLE;
+            gate.setPosition(GATE_CLOSE);
+            motorshoot.setVelocity(STOP_SPEED);
+
+            flapper3.setPosition(FLAPPER_3_OPEN);
+            flapper2.setPosition(FLAPPER_2_OPEN);
+        }
+    }
+
+    public void triggerShootStateMachine() {
+        bShootRequested = true;
+        while (opModeIsActive()) {
+            runShootStateMachine();
+            if (!bShootRequested)
+                break;
+        }
+    }
+
 
 }
 

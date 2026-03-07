@@ -77,14 +77,6 @@ public class Opmode9 extends LinearOpMode {
     private static double elevator_target_height_ticks =
             (elevator_target_height_inches / CIRCUMFERENCE_HTD5M_PULLEY_24T_IN_INCHES * TICKS_PER_REVOLUTION_ELEVATOR_MOTOR); //fix should be about 10,500
 
-    // Constants for GoBilda 5203 6000 rpm motor
-    private final double SHOOTER_RPM_SHORT = 2600.0; //3000 // 28x2786/60 //28
-    private final double SHOOTER_RPM_LONG = 3050; //36?
-    private final double SHOOTER_RPM_CLEAR = -500;
-    private final double SHOOTER_CHANGE = 200;
-    private double rpm = SHOOTER_RPM_SHORT;
-
-
 
     private double controller1Speed = 1.0;
     ElapsedTime controller1SpeedChangeTimer = new ElapsedTime();
@@ -96,9 +88,18 @@ public class Opmode9 extends LinearOpMode {
     ElapsedTime shootTimer2 = new ElapsedTime();
     ElapsedTime triggerTimer2 = new ElapsedTime();
     ElapsedTime shootTimer3 = new ElapsedTime();
-    ElapsedTime triggerTimer3 = new ElapsedTime();
+    ElapsedTime shooterSpeedChangeTimer = new ElapsedTime();
+    ElapsedTime flapper2Timer = new ElapsedTime();
+    ElapsedTime flapper3Timer = new ElapsedTime();
+    static final double FLAPPER_2_BUTTON_TIME = 0.2;
+    static final double FLAPPER_2_CLOSE_TIME = 0.5;
+    static final double FLAPPER_3_BUTTON_TIME = 0.2;
+    static final double FLAPPER_3_CLOSE_TIME = 0.5;
+    private boolean flapper2ManualTriggered = false;
+    private boolean flapper3ManualTriggered = false;
+
     static final double INTAKE_START_TIME = 0.8;
-    static final double SHOOT_1_TIME = 0.5;
+    static final double SHOOT_1_TIME = 0.8;
     static final double SHOOT_2_TIME = 0.5;
     static final double TRIGGER_2_TIME = 0.5;
     static final double SHOOT_3_TIME = 0.5;
@@ -123,21 +124,22 @@ public class Opmode9 extends LinearOpMode {
 
     private SHOOT_STATES shootState = SHOOT_STATES.IDLE;
     private boolean bShootRequested = false;
-    private boolean bArtifact2Triggered = false;
-    private boolean bArtifact3Triggered = false;
 
     final double STOP_SPEED = 0.0;
 
     boolean bTriggerEnabled = false;
 
     // Constants for GoBilda 5203 6000 rpm motor
+    // Constants for GoBilda 5203 6000 rpm motor
     static final double TICKS_PER_REVOLUTION = 28.0;
     static final double MAX_TICKS_PER_SEC = 2800.0;
 
-    final double SHOOTER_TARGET_INIT_RPM = 2800;    // RPM: Rotations Per Minute
-    final double SHOOTER_TARGET_RANGE = 100;
+    private final double SHOOTER_RPM_SHORT = 2800.0; //3000 // 28x2786/60 //28
+    private final double SHOOTER_RPM_LONG = 3450.0; //36?
 
-    private double shooter_target_rpm = SHOOTER_TARGET_INIT_RPM;
+    final double SHOOTER_TARGET_RANGE = 20;
+
+    private double shooter_target_rpm = SHOOTER_RPM_SHORT;
     private double shooter_target_ticks = shooter_target_rpm * TICKS_PER_REVOLUTION / 60;
     private double shooter_target_ticks_low= (shooter_target_rpm - SHOOTER_TARGET_RANGE) * TICKS_PER_REVOLUTION / 60;
 
@@ -191,10 +193,6 @@ public class Opmode9 extends LinearOpMode {
         triggerTimer.reset();
 
         while (opModeIsActive()) {
-            boolean a = gamepad2.a;
-            boolean b = gamepad2.b;
-            boolean y = gamepad2.y;
-            boolean x = gamepad2.x;
 
 //DRIVING
             double x_dir = gamepad1.left_stick_x * controller1Speed;
@@ -244,34 +242,6 @@ public class Opmode9 extends LinearOpMode {
                 robot.motorintake.setPower(INTAKE_POWER_STOP);
             }
 
-            //shooting
-
-            if(b && !prevB){
-                rpm += SHOOTER_CHANGE;
-                sleep(50);  // this is a blocking call which should be avoided in teleop mode
-            }
-            if(x && !prevX){
-                rpm -= SHOOTER_CHANGE;
-                sleep(50);  // this is a blocking call which should be avoided in teleop mode.
-            }
-
-            if (y && !prevY){
-                robot.autoShoot(SHOOTER_RPM_SHORT);
-                //find a solution for this
-            }
-            if (gamepad2.right_bumper){
-                robot.autoShoot(SHOOTER_RPM_LONG);
-            }
-
-            if(a && !prevA){
-                robot.stopShooter();
-            }
-
-            prevA = a;
-            prevB = b;
-            prevY = y;
-            prevX = x;
-
             //turret
             if (gamepad2.dpad_left){
                 robot.motorturret.setPower(turretPower * turretFactor);
@@ -280,6 +250,8 @@ public class Opmode9 extends LinearOpMode {
             } else {
                 robot.motorturret.setPower(0);
             }
+
+            // flapper control
 
 
             // trigger to launch the single artifact
@@ -314,6 +286,71 @@ public class Opmode9 extends LinearOpMode {
                 }
             }
 
+            // left trigger to manually close flapper 3
+            // boolean flag is required in order not to mess up shooterStateMachine.
+            if (gamepad2.left_trigger > 0.5) {
+                if (flapper3Timer.seconds() > FLAPPER_3_BUTTON_TIME) {
+                    flapper3Timer.reset();
+                    robot.flapper3.setPosition(FLAPPER_3_CLOSE);
+                    flapper2ManualTriggered = true;
+                }
+            }
+            else if (flapper2ManualTriggered) {
+                if (flapper3Timer.seconds() > FLAPPER_3_CLOSE_TIME) {
+                    robot.flapper3.setPosition(FLAPPER_3_OPEN);
+                    flapper2ManualTriggered = false;
+                }
+            }
+
+            // left trigger to manually close flapper 2
+            // boolean flag is required in order not to mess up shooterStateMachine.
+            if (gamepad2.left_bumper) {
+                if (flapper2Timer.seconds() > FLAPPER_2_BUTTON_TIME) {
+                    flapper2Timer.reset();
+                    robot.flapper2.setPosition(FLAPPER_2_CLOSE);
+                    flapper3ManualTriggered = true;
+                }
+            }
+            else if (flapper3ManualTriggered) {
+                if (flapper2Timer.seconds() > FLAPPER_2_CLOSE_TIME) {
+                    robot.flapper2.setPosition(FLAPPER_2_OPEN);
+                    flapper3ManualTriggered = false;
+                }
+            }
+
+            // Shooter speed control
+            if (gamepad2.x){
+                // Far side
+                if (shooterSpeedChangeTimer.seconds() > SPEED_CHANGE_TIME) {
+                    shooterSpeedChangeTimer.reset();
+                    shooter_target_rpm = SHOOTER_RPM_LONG;
+                }
+                updateShooterTargetRpm(shooter_target_rpm);
+            }
+            else if (gamepad2.b){
+                // Near side
+                if (shooterSpeedChangeTimer.seconds() > SPEED_CHANGE_TIME) {
+                    shooterSpeedChangeTimer.reset();
+                    shooter_target_rpm = SHOOTER_RPM_SHORT;
+                }
+                updateShooterTargetRpm(shooter_target_rpm);
+            }
+            else if (gamepad2.y) {
+                // Minor adjustment
+                if (shooterSpeedChangeTimer.seconds() > SPEED_CHANGE_TIME) {
+                    shooterSpeedChangeTimer.reset();
+                    shooter_target_rpm += 50;
+                }
+                updateShooterTargetRpm(shooter_target_rpm);
+            }
+            else if (gamepad2.a){
+                if (shooterSpeedChangeTimer.seconds() > SPEED_CHANGE_TIME) {
+                    shooterSpeedChangeTimer.reset();
+                    shooter_target_rpm -= 50;
+                }
+                updateShooterTargetRpm(shooter_target_rpm);
+            }
+
             runShootStateMachine();
             //elevator
             runElevatorStateMachine();
@@ -321,14 +358,20 @@ public class Opmode9 extends LinearOpMode {
             telemetry.addData("intakePower", robot.motorintake.getPower());
             telemetry.addData("shooter velocity", (robot.motorshoot.getVelocity() * 2 ));
             telemetry.addData("shooter tpr", robot.motorshoot.getMotorType().getTicksPerRev());
-            telemetry.addData("projected rpm", rpm);
+            telemetry.addData("shooter rpm", shooter_target_rpm);
             telemetry.addData("controller1Speed", controller1Speed);
             telemetry.addData("turret factor", turretFactor);
             telemetry.update();
             idle();
         }
+    }
 
-
+    void updateShooterTargetRpm(double target_rpm) {
+        shooter_target_rpm = target_rpm;
+        shooter_target_ticks = Math.max(0, Math.min(MAX_TICKS_PER_SEC,
+                shooter_target_rpm * TICKS_PER_REVOLUTION / 60));
+        shooter_target_ticks_low = Math.max(0, Math.min(MAX_TICKS_PER_SEC,
+                (shooter_target_rpm - SHOOTER_TARGET_RANGE) * TICKS_PER_REVOLUTION / 60));
     }
 
     void runElevatorStateMachine() {

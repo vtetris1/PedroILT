@@ -3,10 +3,11 @@ package org.firstinspires.ftc.teamcode.autonomous;
 
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 //ignore this for now
-@Autonomous(name="BLUE_Near_3_Leave_Base")
-public class BLUE_Near_3_Leave_Base extends AutoHardware2 {
+@Autonomous(name="BLUE_Near_2_Leave_Base")
+public class BLUE_Near_2_Leave_Base extends AutoHardware2 {
 
     // Motor encoder parameter
     double ticksPerInch = 31.3;
@@ -15,7 +16,7 @@ public class BLUE_Near_3_Leave_Base extends AutoHardware2 {
     private final double SHOOTER_RPM_LONG = 3050;
     private int target = 200; // Rotations Per Minute
 
-    public BLUE_Near_3_Leave_Base() {
+    public BLUE_Near_2_Leave_Base() {
     }
 
     @Override
@@ -23,22 +24,36 @@ public class BLUE_Near_3_Leave_Base extends AutoHardware2 {
         init(hardwareMap);
 
         //reset encoder
-        setAutoDriveMotorMode();
+        setAutoDriveMotorModeWithoutEncoder();
         // Set target rpm based on the specific robot position: far, near
         setShooterTargetRpm(SHOOTER_RPM_SHORT, SHOOTER_RPM_SHORT - 20);
         waitForStart();
 
+        /*
         double inchesForward = 40;
-        int ticksForward = -(int) (inchesForward * getTicksPerInch());
+        int ticksForward = (int) (inchesForward * getTicksPerInch());
         driveMotors(ticksForward, ticksForward, ticksForward, ticksForward, 0.3, false, getCurrentYaw());
+         */
+        double power = 0.3;
+        setDrivePower(power, power, power, power);
+        sleep(2000);
+        setDrivePower(0, 0, 0, 0);
 
-        triggerShoot(3);
+        triggerShootStateMachine();
 
         double targetYaw = 45;
+        setDrivePower(power, -power, power, -power);
+        sleep(2500);
+        setDrivePower(power, power, power, power);
+        sleep(2000);
+        setDrivePower(0, 0, 0, 0);
+
+        /*
         turnToTargetYaw(targetYaw, 0.5, 3000);
         inchesForward = 26;
-        ticksForward = (int) (inchesForward * getTicksPerInch());
+        ticksForward = -(int) (inchesForward * getTicksPerInch());
         driveMotors(ticksForward, ticksForward, ticksForward, ticksForward, 0.3, false, getCurrentYaw());
+         */
     }
 }
 
