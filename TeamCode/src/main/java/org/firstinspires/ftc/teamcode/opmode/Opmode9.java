@@ -16,8 +16,7 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -102,7 +101,7 @@ public class Opmode9 extends LinearOpMode {
     static final double SHOOT_1_TIME = 0.8;
     static final double SHOOT_2_TIME = 0.5;
     static final double TRIGGER_2_TIME = 0.5;
-    static final double SHOOT_3_TIME = 0.5;
+    static final double SHOOT_3_TIME = 0.8;
     static final double TRIGGER_3_TIME = 0.5;
 
     static final double TRIGGER_SHOOT_TIME = 0.5;
@@ -162,11 +161,10 @@ public class Opmode9 extends LinearOpMode {
     }
 
 
-    Limelight3A limelight;
     public void localizationUpdate(){
 
-        LLResult result = limelight.getLatestResult();
-        limelight.updateRobotOrientation(robot.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
+        LLResult result = robot.limelight.getLatestResult();
+        robot.limelight.updateRobotOrientation(robot.imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
         robot.pinpoint.update();
 
         if (result != null && result.isValid()) {
