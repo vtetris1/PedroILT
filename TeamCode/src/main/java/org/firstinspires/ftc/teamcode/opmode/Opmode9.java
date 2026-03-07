@@ -135,6 +135,8 @@ public class Opmode9 extends LinearOpMode {
 
     final double STOP_SPEED = 0.0;
 
+    private boolean toggleSpeed = false;
+
     boolean bTriggerEnabled = false;
 
     // Constants for GoBilda 5203 6000 rpm motor
@@ -248,6 +250,18 @@ public class Opmode9 extends LinearOpMode {
                 robot.motorintake.setPower(INTAKE_POWER_OUTTAKE);
             } else if (!bShootRequested) {
                 robot.motorintake.setPower(INTAKE_POWER_STOP);
+            }
+            if (gamepad1.dpad_left) {
+                if (controller1SpeedChangeTimer.seconds() >= SPEED_CHANGE_TIME && !toggleSpeed) {
+                    controller1SpeedChangeTimer.reset();
+                    toggleSpeed = true;
+                }
+                else{
+                    toggleSpeed = false;
+                    controller1SpeedChangeTimer.reset();
+                    controller1Speed = 1;
+
+                }
             }
 
             //turret
