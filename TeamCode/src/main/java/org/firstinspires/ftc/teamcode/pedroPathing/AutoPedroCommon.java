@@ -6,14 +6,15 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import static org.firstinspires.ftc.teamcode.autonomous.AutoHardware2.SHOOT_STATES;
-
+import org.firstinspires.ftc.teamcode.autonomous.AutoHardware2;
+//yooooo help
 import java.util.ArrayList;
 
 public abstract class AutoPedroCommon extends OpMode {
 
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
+
 
     private int pathState;
     ArrayList<PoseItem> poseList = new ArrayList<PoseItem>() ;
@@ -101,6 +102,7 @@ public abstract class AutoPedroCommon extends OpMode {
         }
         else {
             return false;
+
         }
     }
 
@@ -199,4 +201,5 @@ public abstract class AutoPedroCommon extends OpMode {
     @Override
     public void stop() {
     }
+
 }
