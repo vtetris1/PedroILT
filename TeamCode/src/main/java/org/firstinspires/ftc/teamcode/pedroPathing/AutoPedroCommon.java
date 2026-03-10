@@ -6,14 +6,18 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import org.firstinspires.ftc.teamcode.autonomous.AutoHardware2;
+//import org.firstinspires.ftc.teamcode.pedroPathing.AutoHardware2Common;
 //yooooo help
+import org.firstinspires.ftc.teamcode.hardware.robotHardware;
+
 import java.util.ArrayList;
 
 public abstract class AutoPedroCommon extends OpMode {
+    robotHardware robot = new robotHardware();
 
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
+    private boolean bShootRequested = false;
 
 
     private int pathState;
@@ -97,10 +101,13 @@ public abstract class AutoPedroCommon extends OpMode {
     public boolean doneShooting() {
         if(pathTimer.getElapsedTimeSeconds() > 3) {
             pathTimer.resetTimer();
-
+//stop shoot
+            bShootRequested = false;
             return true;
         }
         else {
+//set shooter spped state machine
+            bShootRequested = true;
             return false;
 
         }
@@ -109,9 +116,11 @@ public abstract class AutoPedroCommon extends OpMode {
     public boolean doneIntake() {
         if(pathTimer.getElapsedTimeSeconds() > 2) {
             pathTimer.resetTimer();
+            robot.motorintake.setPower(0);
             return true;
         }
         else {
+            robot.motorintake.setPower(-1);
             return false;
         }
     }
@@ -202,4 +211,5 @@ public abstract class AutoPedroCommon extends OpMode {
     public void stop() {
     }
 
-}
+
+    }

@@ -20,20 +20,19 @@ public class Far_3_Leave_Base extends AutoHardware2 {
     public void runOpMode() throws InterruptedException {
         init(hardwareMap);
 
-        //reset encoder
-        setAutoDriveMotorMode();
+        setAutoDriveMotorModeWithoutEncoder();
         // Set target rpm based on the specific robot position: far, near
-        setShooterTargetRpm(SHOOTER_RPM_LONG, SHOOTER_RPM_LONG);
+        setShooterTargetRpm(SHOOTER_RPM_LONG, SHOOTER_RPM_LONG - 20);
         waitForStart();
-        triggerShoot(3);
 
-        double targetYaw = getCurrentYaw();
-        double inchesForward = 16;
-        int ticksForward = (int)(inchesForward * getTicksPerInch());
-        setDrivePower(0.3, 0.3, 0.3, 0.3);
-        sleep(1000);
+
+        triggerShootStateMachine();
+
+        //reset encoder
+        double power = 0.3;
+        setDrivePower(-power, -power, -power, -power);
+        sleep(2000);
         setDrivePower(0, 0, 0, 0);
-        sleep(30000);
     }
 }
 

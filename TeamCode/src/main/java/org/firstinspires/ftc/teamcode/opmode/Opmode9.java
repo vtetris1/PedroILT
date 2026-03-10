@@ -43,6 +43,8 @@ public class Opmode9 extends LinearOpMode {
     private boolean prevB = false;
     private boolean prevY = false;
     private boolean prevX = false;
+    private boolean prevLeftBumper = false;
+    private boolean manualshootActive = false;
 
     public enum PARK_STATES {
         INIT,
@@ -95,6 +97,8 @@ public class Opmode9 extends LinearOpMode {
     ElapsedTime shooterSpeedChangeTimer = new ElapsedTime();
     ElapsedTime flapper2Timer = new ElapsedTime();
     ElapsedTime flapper3Timer = new ElapsedTime();
+
+    ElapsedTime manualshoot = new ElapsedTime();
     static final double FLAPPER_2_BUTTON_TIME = 0.2;
     static final double FLAPPER_2_CLOSE_TIME = 0.5;
     static final double FLAPPER_3_BUTTON_TIME = 0.2;
@@ -128,7 +132,6 @@ public class Opmode9 extends LinearOpMode {
         SPIN_UP3,
         SHOOT_3RD,
     }
-    // 🔹 UPDATED STATE MACHINE
 
     private SHOOT_STATES shootState = SHOOT_STATES.IDLE;
     private boolean bShootRequested = false;
@@ -163,6 +166,7 @@ public class Opmode9 extends LinearOpMode {
     private final double turretPower = 0.9;
     private boolean turretMode = false;
     private double turretFactor = 1;
+    private boolean manualOverride = false;
 
 
 
@@ -170,6 +174,8 @@ public class Opmode9 extends LinearOpMode {
     private long nowMs() {
         return System.currentTimeMillis();
     }
+
+    private boolean manualSHOOTING = false;
 
 
     private Timer pathTimer, actionTimer, opmodeTimer;
@@ -196,11 +202,12 @@ public class Opmode9 extends LinearOpMode {
         Pose2D currentPos = robot.pinpoint.getPosition();
 
 
+        telemetry.addData("============================", " ");
         telemetry.addData("Status", robot.pinpoint.getDeviceStatus());
         telemetry.addData("x", currentPos.getX(DistanceUnit.MM));
         telemetry.addData("y", currentPos.getY(DistanceUnit.MM));
         telemetry.addData("heading", currentPos.getHeading(AngleUnit.DEGREES));
-        telemetry.update();
+        telemetry.addData("============================", " ");
     }
 
 
@@ -243,6 +250,7 @@ public class Opmode9 extends LinearOpMode {
             if(gamepad2.dpad_down) {
                 robot.motorintake.setPower(0.5);
                 sleep(50);
+                robot.motorintake.setPower(0);
             }
             else if (gamepad1.left_bumper){
                 robot.motorintake.setPower(INTAKE_POWER_INTAKE);
@@ -252,14 +260,15 @@ public class Opmode9 extends LinearOpMode {
                 robot.motorintake.setPower(INTAKE_POWER_STOP);
             }
             if (gamepad1.dpad_left) {
-                if (controller1SpeedChangeTimer.seconds() >= SPEED_CHANGE_TIME && !toggleSpeed) {
-                    controller1SpeedChangeTimer.reset();
+                if (!toggleSpeed) {
+                    controller1Speed = 0.2;
                     toggleSpeed = true;
+                    telemetry.addData("slowed slowed slwoed slowed slwoed", "");
                 }
                 else{
                     toggleSpeed = false;
                     controller1SpeedChangeTimer.reset();
-                    controller1Speed = 1;
+                    controller1Speed = 1.0;
 
                 }
             }
@@ -276,7 +285,6 @@ public class Opmode9 extends LinearOpMode {
             // flapper control
 
 
-            // trigger to launch the single artifact
             if (gamepad2.dpad_up) {
 //                turretMode = !turretMode;
 //                if(turretMode){
@@ -295,9 +303,6 @@ public class Opmode9 extends LinearOpMode {
 
 
             }
-            else if (gamepad2.right_trigger > 0.5) {
-                bShootRequested = true;
-            }
             else if (gamepad2.right_bumper) {
                 bShootRequested = false;
             }
@@ -308,9 +313,44 @@ public class Opmode9 extends LinearOpMode {
                 }
             }
 
-            // left trigger to manually close flapper 3
+            // toggle manual override on rising edge
+            if (gamepad2.left_bumper && !prevLeftBumper) {
+                manualOverride = !manualOverride;
+                bShootRequested = manualOverride;
+            }
+            prevLeftBumper = gamepad2.left_bumper;
+
+            if (gamepad2.left_trigger > 0.5) {
+                if (!manualshootActive) {
+                    manualshoot.reset();
+                    manualshootActive = true;
+                    robot.gate.setPosition(GATE_OPEN);
+                }
+                double t = manualshoot.seconds();
+                if (t > 0.2) robot.motorintake.setPower(-1.0);
+                if (t > 0.5) {
+                    robot.flapper3.setPosition(FLAPPER_3_CLOSE);
+                    robot.flapper2.setPosition(FLAPPER_3_CLOSE);
+                }
+                if (t > 1.0) {
+                    robot.gate.setPosition(GATE_CLOSE);
+                    robot.flapper2.setPosition(FLAPPER_2_OPEN);
+                    robot.flapper2.setPosition(FLAPPER_2_OPEN);
+                }
+            } else {
+                if (manualshootActive) {
+                    robot.motorintake.setPower(INTAKE_POWER_STOP);
+                    robot.gate.setPosition(GATE_CLOSE);
+                    manualshootActive = false;
+                    bShootRequested = false;
+                }
+            }
+
+
+
             // boolean flag is required in order not to mess up shooterStateMachine.
             if (gamepad2.right_trigger > 0.5) {
+                bShootRequested = true;
                 if (flapper3Timer.seconds() > FLAPPER_3_BUTTON_TIME) {
                     flapper3Timer.reset();
                     robot.flapper3.setPosition(FLAPPER_3_CLOSE);
@@ -326,19 +366,19 @@ public class Opmode9 extends LinearOpMode {
 
             // left trigger to manually close flapper 2
             // boolean flag is required in order not to mess up shooterStateMachine.
-            if (gamepad2.left_bumper) {
-                if (flapper2Timer.seconds() > FLAPPER_2_BUTTON_TIME) {
-                    flapper2Timer.reset();
-                    robot.flapper2.setPosition(FLAPPER_2_CLOSE);
-                    flapper3ManualTriggered = true;
-                }
-            }
-            else if (flapper3ManualTriggered) {
-                if (flapper2Timer.seconds() > FLAPPER_2_CLOSE_TIME) {
-                    robot.flapper2.setPosition(FLAPPER_2_OPEN);
-                    flapper3ManualTriggered = false;
-                }
-            }
+//            if (gamepad2.left_bumper) {
+//                if (flapper2Timer.seconds() > FLAPPER_2_BUTTON_TIME) {
+//                    flapper2Timer.reset();
+//                    robot.flapper2.setPosition(FLAPPER_2_CLOSE);
+//                    flapper3ManualTriggered = true;
+//                }
+//            }
+//            else if (flapper3ManualTriggered) {
+//                if (flapper2Timer.seconds() > FLAPPER_2_CLOSE_TIME) {
+//                    robot.flapper2.setPosition(FLAPPER_2_OPEN);
+//                    flapper3ManualTriggered = false;
+//                }
+//            }
 
             // Shooter speed control
             if (gamepad2.x){
@@ -357,32 +397,20 @@ public class Opmode9 extends LinearOpMode {
                 }
                 updateShooterTargetRpm(shooter_target_rpm);
             }
-            else if (gamepad2.y) {
-                // Minor adjustment
-                if (shooterSpeedChangeTimer.seconds() > SPEED_CHANGE_TIME) {
-                    shooterSpeedChangeTimer.reset();
-                    shooter_target_rpm += 50;
-                }
-                updateShooterTargetRpm(shooter_target_rpm);
-            }
-            else if (gamepad2.a){
-                if (shooterSpeedChangeTimer.seconds() > SPEED_CHANGE_TIME) {
-                    shooterSpeedChangeTimer.reset();
-                    shooter_target_rpm -= 50;
-                }
-                updateShooterTargetRpm(shooter_target_rpm);
-            }
+
 
             runShootStateMachine();
             //elevator
             runElevatorStateMachine();
             // --- TELEMETRY ---
-//            telemetry.addData("intakePower", robot.motorintake.getPower());
-//            telemetry.addData("shooter velocity", (robot.motorshoot.getVelocity() * 2 ));
-//            telemetry.addData("shooter tpr", robot.motorshoot.getMotorType().getTicksPerRev());
-//            telemetry.addData("shooter rpm", shooter_target_rpm);
-//            telemetry.addData("controller1Speed", controller1Speed);
-//            telemetry.addData("turret factor", turretFactor);
+            telemetry.addData("============================", " ");
+            telemetry.addData("shooter rpm", shooter_target_rpm);
+            telemetry.addData("============================", " ");
+            telemetry.addData("intakePower", robot.motorintake.getPower());
+            telemetry.addData("shooter velocity", (robot.motorshoot.getVelocity() * 2 ));
+            telemetry.addData("shooter tpr", robot.motorshoot.getMotorType().getTicksPerRev());
+            telemetry.addData("controller1Speed", controller1Speed);
+            telemetry.addData("turret factor", turretFactor);
             telemetry.update();
             idle();
         }
@@ -451,10 +479,10 @@ public class Opmode9 extends LinearOpMode {
                 }
                 break;
         }
-//        telemetry.addData("parkState", parkState);
-//        telemetry.addData("elevatorInches", elevator_target_height_inches);
-//        telemetry.addData("elevatorTicks", elevator_target_height_ticks);
-//        telemetry.addData("elevatorPos", robot.elevator.getCurrentPosition());
+        telemetry.addData("parkState", parkState);
+        telemetry.addData("elevatorInches", elevator_target_height_inches);
+        telemetry.addData("elevatorTicks", elevator_target_height_ticks);
+        telemetry.addData("elevatorPos", robot.elevator.getCurrentPosition());
     }
 
     void goDownSlowly() {
@@ -467,109 +495,117 @@ public class Opmode9 extends LinearOpMode {
     }
 
     void runShootStateMachine() {
+        if (!manualOverride){
 
-        switch (shootState) {
-            case IDLE:
-                if (bShootRequested) {
-                    shootState = SHOOT_STATES.SPIN_UP1;
-                }
-                break;
-            case SPIN_UP1:
-                if (bShootRequested) {
-                    robot.gate.setPosition(GATE_OPEN);
-                    if (robot.motorshoot.getVelocity() > shooter_target_ticks_low) {
-                        shootState = SHOOT_STATES.START_INTAKE1;
-                        intakeStartTimer.reset();
+            switch (shootState) {
+                case IDLE:
+                    if (bShootRequested) {
+                        shootState = SHOOT_STATES.SPIN_UP1;
                     }
-                }
-                break;
-            case START_INTAKE1:
-                if (bShootRequested) {
-
-                    robot.motorintake.setPower(0.5);
-                    sleep(30);
-
-                    robot.motorintake.setPower(INTAKE_POWER_INTAKE);
-
-
-
-                    if (intakeStartTimer.seconds() > INTAKE_START_TIME) {
-                        shootState = SHOOT_STATES.SHOOT_1ST;
-                        shootTimer1.reset();
+                    break;
+                case SPIN_UP1:
+                    if (bShootRequested) {
+                        robot.gate.setPosition(GATE_OPEN);
+                        if (robot.motorshoot.getVelocity() > shooter_target_ticks_low) {
+                            shootState = SHOOT_STATES.START_INTAKE1;
+                            intakeStartTimer.reset();
+                        }
                     }
-                }
-                break;
+                    break;
+                case START_INTAKE1:
+                    if (bShootRequested) {
 
-            case SHOOT_1ST:
-                if (bShootRequested) {
-                    // Shoot 1st artifact by intake stage 3 flapper
-                    robot.flapper3.setPosition(FLAPPER_3_CLOSE);
-                    if (shootTimer1.seconds() > SHOOT_1_TIME) {
-                        shootState = SHOOT_STATES.SPIN_UP2;
-                        robot.flapper3.setPosition(FLAPPER_3_OPEN);
+                        robot.motorintake.setPower(0.5);
+                        sleep(30);
+
+                        robot.motorintake.setPower(INTAKE_POWER_INTAKE);
+
+
+
+                        if (intakeStartTimer.seconds() > INTAKE_START_TIME) {
+                            shootState = SHOOT_STATES.SHOOT_1ST;
+                            shootTimer1.reset();
+                        }
                     }
-                    sleep(100);
-                }
-                break;
+                    break;
 
-            case SPIN_UP2:
-                if (bShootRequested) {
-                    robot.gate.setPosition(GATE_OPEN);
-                    if (robot.motorshoot.getVelocity() > shooter_target_ticks_low) {
-                        shootState = SHOOT_STATES.SHOOT_2ND;
-                        shootTimer2.reset();
+                case SHOOT_1ST:
+                    if (bShootRequested) {
+                        // Shoot 1st artifact by intake stage 3 flapper
                         robot.flapper3.setPosition(FLAPPER_3_CLOSE);
-                        robot.flapper2.setPosition(FLAPPER_2_CLOSE);
-                    }
-                }
-                break;
-
-            case SHOOT_2ND:
-                if (bShootRequested) {
-                    // Keep stage 3 flapper closed.
-                    // Shoot 2nd artifact by intake stage 2 flapper if target rpm reached
-                    robot.flapper3.setPosition(FLAPPER_3_CLOSE);
-                    robot.flapper2.setPosition(FLAPPER_2_CLOSE);
-                    robot.motorintake.setPower(INTAKE_POWER_INTAKE);
-                    if (shootTimer2.seconds() > SHOOT_2_TIME) {
-                        shootState = SHOOT_STATES.SPIN_UP3;
-
-                        robot.flapper3.setPosition(FLAPPER_3_OPEN);
-                        robot.flapper2.setPosition(FLAPPER_2_OPEN);
+                        if (shootTimer1.seconds() > SHOOT_1_TIME) {
+                            shootState = SHOOT_STATES.SPIN_UP2;
+                            robot.flapper3.setPosition(FLAPPER_3_OPEN);
+                        }
                         sleep(100);
                     }
-                }
-                break;
-            case SPIN_UP3:
-                if (bShootRequested) {
-                    robot.gate.setPosition(GATE_OPEN);
-                    if (robot.motorshoot.getVelocity() > shooter_target_ticks_low) {
-                        shootState = SHOOT_STATES.SHOOT_3RD;
-                        shootTimer3.reset();
+                    break;
+
+                case SPIN_UP2:
+                    if (bShootRequested) {
+                        robot.gate.setPosition(GATE_OPEN);
+                        if (robot.motorshoot.getVelocity() > shooter_target_ticks_low) {
+                            shootState = SHOOT_STATES.SHOOT_2ND;
+                            shootTimer2.reset();
+                            robot.flapper3.setPosition(FLAPPER_3_CLOSE);
+                            robot.flapper2.setPosition(FLAPPER_2_CLOSE);
+                        }
+                    }
+                    break;
+
+                case SHOOT_2ND:
+                    if (bShootRequested) {
+                        // Keep stage 3 flapper closed.
+                        // Shoot 2nd artifact by intake stage 2 flapper if target rpm reached
                         robot.flapper3.setPosition(FLAPPER_3_CLOSE);
                         robot.flapper2.setPosition(FLAPPER_2_CLOSE);
-                    }
-                }
-                break;
+                        robot.motorintake.setPower(INTAKE_POWER_INTAKE);
+                        if (shootTimer2.seconds() > SHOOT_2_TIME) {
+                            shootState = SHOOT_STATES.SPIN_UP3;
 
-            case SHOOT_3RD:
-                if (bShootRequested) {
-                    robot.flapper3.setPosition(FLAPPER_3_CLOSE);
-                    robot.flapper2.setPosition(FLAPPER_2_CLOSE);
-                    robot.motorintake.setPower(INTAKE_POWER_INTAKE);
-                    if (shootTimer3.seconds() > SHOOT_3_TIME) {
-                        shootState = SHOOT_STATES.IDLE;
-                        bShootRequested = false;
-                        robot.motorintake.setPower(INTAKE_POWER_STOP);
+                            robot.flapper3.setPosition(FLAPPER_3_OPEN);
+                            robot.flapper2.setPosition(FLAPPER_2_OPEN);
+                            sleep(100);
+                        }
                     }
-                }
-                break;
+                    break;
+                case SPIN_UP3:
+                    if (bShootRequested) {
+                        robot.gate.setPosition(GATE_OPEN);
+                        if (robot.motorshoot.getVelocity() > shooter_target_ticks_low) {
+                            shootState = SHOOT_STATES.SHOOT_3RD;
+                            shootTimer3.reset();
+                            robot.flapper3.setPosition(FLAPPER_3_CLOSE);
+                            robot.flapper2.setPosition(FLAPPER_2_CLOSE);
+                        }
+                    }
+                    break;
+
+                case SHOOT_3RD:
+                    if (bShootRequested) {
+                        robot.flapper3.setPosition(FLAPPER_3_CLOSE);
+                        robot.flapper2.setPosition(FLAPPER_2_CLOSE);
+                        robot.motorintake.setPower(INTAKE_POWER_INTAKE);
+                        if (shootTimer3.seconds() > SHOOT_3_TIME) {
+                            shootState = SHOOT_STATES.IDLE;
+                            bShootRequested = false;
+                            robot.motorintake.setPower(INTAKE_POWER_STOP);
+                        }
+                    }
+                    break;
+            }
         }
+
         if (bShootRequested) {
-            robot.gate.setPosition(GATE_OPEN);
+
+            if (!manualOverride){
+                robot.gate.setPosition(GATE_OPEN);
+
+            }
             robot.motorshoot.setVelocity(shooter_target_ticks);
         }
-        else {
+        else if (!manualOverride){
+
             shootState = SHOOT_STATES.IDLE;
             robot.gate.setPosition(GATE_CLOSE);
             robot.motorshoot.setVelocity(STOP_SPEED);

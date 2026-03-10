@@ -5,6 +5,7 @@ import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.tel
 
 import static java.lang.Thread.sleep;
 
+import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -16,10 +17,14 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.pedropathing.util.Timer;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.autonomous.AutoHardware2;
+import org.firstinspires.ftc.teamcode.opmode.Opmode9;
+
 
 
 import com.qualcomm.hardware.limelightvision.LLResult;
@@ -76,6 +81,33 @@ public class robotHardware {
     private double shooter_target_ticks_low = (shooter_target_rpm - SHOOTER_TARGET_RANGE) * TICKS_PER_REVOLUTION / 60;
 
 
+    ElapsedTime controller1SpeedChangeTimer = new ElapsedTime();
+
+
+    ElapsedTime triggerTimer = new ElapsedTime();
+    ElapsedTime intakeStartTimer = new ElapsedTime();
+    ElapsedTime shootTimer1 = new ElapsedTime();
+    ElapsedTime shootTimer2 = new ElapsedTime();
+    ElapsedTime triggerTimer2 = new ElapsedTime();
+    ElapsedTime shootTimer3 = new ElapsedTime();
+    ElapsedTime shooterSpeedChangeTimer = new ElapsedTime();
+    ElapsedTime flapper2Timer = new ElapsedTime();
+    ElapsedTime flapper3Timer = new ElapsedTime();
+    static final double FLAPPER_2_BUTTON_TIME = 0.2;
+    static final double FLAPPER_2_CLOSE_TIME = 0.5;
+    static final double FLAPPER_3_BUTTON_TIME = 0.2;
+    static final double FLAPPER_3_CLOSE_TIME = 0.5;
+    private boolean flapper2ManualTriggered = false;
+    private boolean flapper3ManualTriggered = false;
+
+    private boolean localizationActive = false;
+
+    static final double INTAKE_START_TIME = 0.5;
+    static final double SHOOT_1_TIME = 0.5;
+    static final double SHOOT_2_TIME = 1.5;
+    static final double TRIGGER_2_TIME = 0.5;
+    static final double SHOOT_3_TIME = 1.5;
+    static final double TRIGGER_3_TIME = 0.5;
 
     // For motot encoders
     static final double TICKS_DRIVE_PER_REVOLUTION = 384.5;    // GoBilda 435 rpm Yellow Jacket Motor
@@ -114,6 +146,11 @@ public class robotHardware {
         LAUNCHING,  // trigger SHOOT state
         LAUNCHED,   // trigger back to READY
     }
+
+
+
+    private Timer pathTimer, actionTimer, opmodeTimer;
+    private int pathState;
 
     private LAUNCH_STATES launchState;
 
@@ -170,7 +207,7 @@ public class robotHardware {
         motorshoot.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         motorshoot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        double kp = 300.92; //94
+        double kp = 94.92; //94
         double ki = 0.18;
         double kd = 150.29;
         double kf = 11.5;
@@ -475,6 +512,19 @@ public class robotHardware {
     public boolean isShootRequested() {
         return bShootRequested;
     }
+
+    public enum SHOOT_STATES {
+        IDLE,
+        SPIN_UP1,
+        START_INTAKE1,
+        SHOOT_1ST,
+        SPIN_UP2,
+        SHOOT_2ND,
+        SPIN_UP3,
+        SHOOT_3RD,
+    }
+
+    private Opmode9.SHOOT_STATES shootState = Opmode9.SHOOT_STATES.IDLE;
 
 
 }
